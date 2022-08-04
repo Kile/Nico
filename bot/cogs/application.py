@@ -5,26 +5,21 @@ from typing import Union
 from asyncio import sleep, TimeoutError
 
 from bot.utils.interactions import Modal, View, Button
+from bot.static.constants import QUESTIONS
 
 class ApplicationModal(Modal):
 
     def __init__(self, user_id: int, page: int):
         super().__init__(user_id, title="Application")
         if page == 1:
-            self.add_item(discord.ui.TextInput(label="Have you read the welcome message and rules?", placeholder="Yes/No/Maybe", max_length=100))
-            self.add_item(discord.ui.TextInput(label="Where did you find the link to join?", placeholder="Disboard/Google/YT/etc", max_length=100))
-            self.add_item(discord.ui.TextInput(label="How old are you?", placeholder="13-21", required=False, max_length=50))
-            self.add_item(discord.ui.TextInput(label="What are your preferred pronouns?", placeholder="He/She/They", required=False, max_length=50))
-            self.add_item(discord.ui.TextInput(label="What is your sex?", placeholder="male/female", required=False, max_length=50))
+            questions = QUESTIONS[:5]
         elif page == 2:
-            self.add_item(discord.ui.TextInput(label="Where are you from?", placeholder="America/UK/Germany...", required=False, max_length=200))
-            self.add_item(discord.ui.TextInput(label="Are you suicidal or self harm?", placeholder="I self harm/I am suicidal/neither/both", max_length=200))
-            self.add_item(discord.ui.TextInput(label="Are you easily triggered?", placeholder="Yes/No", max_length=100))
-            self.add_item(discord.ui.TextInput(label="Why do you want access to the help channels?", placeholder="Because...", max_length=200))
-            self.add_item(discord.ui.TextInput(label="Do you suffer from any disorders?", placeholder="Yes I have.../No", required=False, max_length=200))
+            questions = QUESTIONS[5:10]
         else:
-            self.add_item(discord.ui.TextInput(label="Do you have experience helping others?", placeholder="Yes/No", max_length=200))
-            self.add_item(discord.ui.TextInput(label="Tell us a bit about yourself", placeholder="I like cookies", max_length=200, style=discord.TextStyle.long, min_length=50))
+            questions = QUESTIONS[:-2]
+
+        for question in questions:
+            self.add_item(discord.ui.TextInput(label=question["question"], placeholder=question["placeholder"], required=question["required"], max_length=question["max_length"]))
 
 class Application(commands.Cog):
 
@@ -32,26 +27,13 @@ class Application(commands.Cog):
         self.client = client
 
     async def cog_load(self):
-        print("Loaded")
+        print("Loaded application cog")
 
     def _to_embed(self, user: Union[discord.Member, discord.User], responses: list) -> discord.Embed:
         embed = discord.Embed.from_dict({
             "title": f"Application of {user.name}",
             "description": user.mention,
-            "fields": [
-                {"name": "Have you read the welcome message and rules?", "value": responses[0]},
-                {"name": "Where did you find the link to join?", "value": responses[1]},
-                {"name": "How old are you?", "value": responses[2] or "N/A"},
-                {"name": "What are your preffered pronouns?", "value": responses[3] or "N/A"},
-                {"name": "What is your sex?", "value": responses[4] or "N/A"},
-                {"name": "Where are you from?", "value": responses[5] or "N/A"},
-                {"name": "Are you suicidal or self harm?", "value": responses[6]},
-                {"name": "Are you easily triggered?", "value": responses[7]},
-                {"name": "Why do you want access to the help channels?", "value": responses[8]},
-                {"name": "Do you suffer from any disorders?", "value": responses[9] or "N/A"},
-                {"name": "Do you have experience helping others?", "value": responses[10]},
-                {"name": "Tell us a bit about yourself", "value": responses[11]}
-            ],
+            "fields": [{"name": QUESTIONS[i], "value": responses[i] or "N/A"} for i in range(len(responses))],
             "color": 0x2f3136,
             "thumbnail": {
                 "url": user.avatar.url if user.avatar else None
@@ -106,70 +88,6 @@ class Application(commands.Cog):
         if self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("You are already verified!", ephemeral=True)
 
-        questions = [
-            {
-                "question": "Have you read the welcome message and rules?",
-                "required": True,
-                "max_length": 100
-            },
-            {
-                "question": "Where did you find the link to join?",
-                "required": True,
-                "max_length": 100
-            },
-            {
-                "question": "How old are you?",
-                "required": False,
-                "max_length": 50
-            },
-            {
-                "question": "What are your preferred pronouns?",
-                "required": False,
-                "max_length": 50
-            },
-            {
-                "question": "What is your sex?",
-                "required": False,
-                "max_length": 50
-            },
-            {
-                "question": "Where are you from?",
-                "required": True,
-                "max_length": 200
-            },
-            {
-                "question": "Are you suicidal or self harm?",
-                "required": True,
-                "max_length": 100
-            },
-            {
-                "question": "Are you easily triggered?",
-                "required": True,
-                "max_length": 50
-            },
-            {
-                "question": "Why do you want access to the help channels?",
-                "required": True,
-                "max_length": 200
-            },
-            {
-                "question": "Do you suffer from any disorders?",
-                "required": False,
-                "max_length": 200
-            },
-            {
-                "question": "Do you have experience helping others?",
-                "required": True,
-                "max_length": 100
-            },
-            {
-                "question": "Tell us a bit about yourself.",
-                "required": True,
-                "max_length": 200,
-                "min_length": 50
-            }
-        ]
-
         answers = []
 
         await interaction.response.send_message("Please check your dms", ephemeral=True)
@@ -177,17 +95,16 @@ class Application(commands.Cog):
 
         await sleep(1)
 
-        for i in range(len(questions)):
-            print(i)
+        for i in range(len(QUESTIONS)):
             try:
-                await interaction.user.send(f"{questions[i]['question']}" + (" (optional)" if not questions[i]["required"] else ""))
+                await interaction.user.send(f"{QUESTIONS[i]['question']}" + (" (optional)" if not QUESTIONS[i]["required"] else ""))
                 answer = await self.client.wait_for("message", timeout=100, check=lambda m: m.author == interaction.user and m.channel == interaction.user.dm_channel)
-                while len(answer.content) > questions[i]["max_length"]:
-                    await interaction.user.send("❌ Answer too long. It can have a max of {} characters. Please try again.".format(questions[i]["max_length"]))
+                while len(answer.content) >QUESTIONS[i]["max_length"]:
+                    await interaction.user.send("❌ Answer too long. It can have a max of {} characters. Please try again.".format(QUESTIONS[i]["max_length"]))
                     answer = await self.client.wait_for("message", timeout=100, check=lambda m: m.author == interaction.user and m.channel == interaction.user.dm_channel)
 
-                while "min_length" in questions[i] and len(answer.content) < questions[i]["min_length"]:
-                    await interaction.user.send("❌ Answer too short. It must be at least {} characters. Please try again.".format(questions[i]["min_length"]))
+                while "min_length" in QUESTIONS[i] and len(answer.content) < QUESTIONS[i]["min_length"]:
+                    await interaction.user.send("❌ Answer too short. It must be at least {} characters. Please try again.".format(QUESTIONS[i]["min_length"]))
                     answer = await self.client.wait_for("message", timeout=100, check=lambda m: m.author == interaction.user and m.channel == interaction.user.dm_channel)
 
                 answers.append(answer.content)
