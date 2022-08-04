@@ -61,10 +61,10 @@ class Roles(commands.Cog):
     async def sexuality(self, interaction: discord.Interaction, sexuality: Sexualities):
         """Choose what sexuality role to assign yourself"""
         if (intercept := self.intercepts([r.id for r in interaction.user.roles], [int(r.value) for r in Sexualities])):
-            await interaction.user.remove_role(self.guild.get_role(intercept))
+            await interaction.user.   remove_roles(self.guild.get_role(intercept))
             # You can only have one sexuality role, so it removes your current one
         
-        await interaction.user.add_role(self.guild.get_role(int(sexuality.value)))
+        await interaction.user.add_roles(self.guild.get_role(int(sexuality.value)))
         await interaction.response.send_message(f"You have been assigned the {sexuality.name} role!")
 
     @roles.command()
@@ -75,10 +75,10 @@ class Roles(commands.Cog):
     async def pronouns(self, interaction: discord.Interaction, pronouns: Choice[str]):
         """Choose what pronouns role to assign yourself"""
         if (intercept := self.intercepts([r.id for r in interaction.user.roles], [int(x.value) for x in self._pronouns])):
-            await interaction.user.remove_role(self.guild.get_role(intercept))
+            await interaction.user.remove_roles(self.guild.get_role(intercept))
             # You can only have one pronouns role, so it removes your current one
         
-        await interaction.user.add_role(self.guild.get_role(int(pronouns.value)))
+        await interaction.user.add_roles(self.guild.get_role(int(pronouns.value)))
         await interaction.response.send_message(f"You have been assigned the {pronouns.name} role!")
 
     @roles.command()
@@ -89,10 +89,10 @@ class Roles(commands.Cog):
     async def dms(self, interaction: discord.Interaction, option: Choice[str]):
         """Choose if you want to recieve dms from others or not"""
         if (intercept := self.intercepts([r.id for r in interaction.user.roles], [int(x.value) for x in self._dm_options])):
-            await interaction.user.remove_role(self.guild.get_role(intercept))
+            await interaction.user.   remove_roles(self.guild.get_role(intercept))
             # You can only have one dms role, so it removes your current one
 
-        await interaction.user.add_role(self.guild.get_role(int(option.value)))
+        await interaction.user.add_roles(self.guild.get_role(int(option.value)))
         await interaction.response.send_message(f"You have been assigned the {option.name} role!")
 
     @roles.command()
@@ -100,11 +100,11 @@ class Roles(commands.Cog):
     async def other(self, interaction: discord.Interaction, role: OtherRoles):
         """Choose one of the various interets roles"""
         if int(role.value) in [r.id for r in interaction.user.roles]:
-            await interaction.user.remove_role(self.guild.get_role(int(role.value)))
+            await interaction.user.remove_roles(self.guild.get_role(int(role.value)))
             # This means the user wants to remove the role
-            return await interaction.response.send_message(f"You have been removed the {role.name} role!")
+            return await interaction.response.send_message(f"You have removed the {role.name} role!")
         else:
-            await interaction.user.add_role(self.guild.get_role(role))
+            await interaction.user.add_roles(self.guild.get_role(int(role.value)))
             return await interaction.response.send_message(f"You have been assigned the {role.name} role!")
 
     @roles.command()
@@ -118,9 +118,9 @@ class Roles(commands.Cog):
             return await interaction.response.send_message("You need to be verified to get one of these roles! Use /verify to apply.", ephemeral=True)
 
         if int(role.value) in [r.id for r in interaction.user.roles]:
-            await interaction.user.remove_role(self.guild.get_role(int(role.value)))
+            await interaction.user.remove_roles(self.guild.get_role(int(role.value)))
             # This means the user wants to remove the role
-            return await interaction.response.send_message(f"You have been removed the {role.name} role!")
+            return await interaction.response.send_message(f"You have removed the {role.name} role!")
         else:
             if role.name == "need help":
                 confirm_button = Button(label="Confirm", style=discord.ButtonStyle.green, custom_id="confirm")
@@ -141,7 +141,7 @@ class Roles(commands.Cog):
                         sos_channel = self.guild.get_channel(self.client.server_info.SOS_CHANNEL)
                         await sos_channel.send(f"{interaction.user.mention} could use some help <@&712375696642801854>")
 
-            await interaction.user.add_role(self.guild.get_role(int(role.value)))
+            await interaction.user.add_roles(self.guild.get_role(int(role.value)))
             return await interaction.response.send_message(f"You have been assigned the {role.name} role!")
 
 Cog = Roles
