@@ -114,6 +114,9 @@ class Roles(commands.Cog):
     @discord.app_commands.describe(role="The role you want to assign yourself")
     async def help(self, interaction: discord.Interaction, role: Choice[str]):
         """Choose one of the various help roles"""
+        if not self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You need to be verified to get one of these roles! Use /verify to apply.", ephemeral=True)
+
         if int(role.value) in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_role(self.guild.get_role(int(role.value)))
             # This means the user wants to remove the role
