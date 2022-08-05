@@ -60,8 +60,8 @@ class Roles(commands.Cog):
     @discord.app_commands.describe(sexuality="Your sexuality")
     async def sexuality(self, interaction: discord.Interaction, sexuality: Sexualities):
         """Choose what sexuality role to assign yourself"""
-        if (intercept := self.intercepts([r.id for r in interaction.user.roles], [int(r.value) for r in Sexualities])):
-            await interaction.user.   remove_roles(self.guild.get_role(intercept))
+        if (intercept := self.intercept([r.id for r in interaction.user.roles], [int(r.value) for r in Sexualities])):
+            await interaction.user.remove_roles(self.guild.get_role(intercept))
             # You can only have one sexuality role, so it removes your current one
         
         await interaction.user.add_roles(self.guild.get_role(int(sexuality.value)))
@@ -74,7 +74,7 @@ class Roles(commands.Cog):
     @discord.app_commands.describe(pronouns="The pronouns you want to use")
     async def pronouns(self, interaction: discord.Interaction, pronouns: Choice[str]):
         """Choose what pronouns role to assign yourself"""
-        if (intercept := self.intercepts([r.id for r in interaction.user.roles], [int(x.value) for x in self._pronouns])):
+        if (intercept := self.intercept([r.id for r in interaction.user.roles], [int(x.value) for x in self._pronouns])):
             await interaction.user.remove_roles(self.guild.get_role(intercept))
             # You can only have one pronouns role, so it removes your current one
         
@@ -88,8 +88,8 @@ class Roles(commands.Cog):
     @discord.app_commands.describe(option="The option you want to use")
     async def dms(self, interaction: discord.Interaction, option: Choice[str]):
         """Choose if you want to recieve dms from others or not"""
-        if (intercept := self.intercepts([r.id for r in interaction.user.roles], [int(x.value) for x in self._dm_options])):
-            await interaction.user.   remove_roles(self.guild.get_role(intercept))
+        if (intercept := self.intercept([r.id for r in interaction.user.roles], [int(x.value) for x in self._dm_options])):
+            await interaction.user.remove_roles(self.guild.get_role(intercept))
             # You can only have one dms role, so it removes your current one
 
         await interaction.user.add_roles(self.guild.get_role(int(option.value)))
