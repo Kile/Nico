@@ -44,7 +44,7 @@ class Roles(commands.Cog):
     def guild(self):
         return self.client.get_guild(self.client.server_info.ID)
 
-    def intercept(list1: list, list2: list) -> Optional[Any]:
+    def interceptself, list1: list, list2: list) -> Optional[Any]:
         """Checks if two lists have any common items"""
         for item in list1:
             if item in list2:
