@@ -1,4 +1,5 @@
 import json
+import discord
 
 from enum import Enum
 
@@ -12,13 +13,12 @@ class KITDServer:
     
     APPLICATION_CHANNEL = 730811764652113960
     FEEDBACK_CHANNEL = 737799496712323154
-    UNTRUSTED_CHANNEL = 1
+    UNTRUSTED_CHANNEL = 729078073135202396
     SOS_CHANNEL = 712384341442822184
 
     TRUSTED_ROLE = 716392797535469649
     VERIFIED_ROLE = 919753805174812723
     WELCOMER_ROLE = 729743673746522242
-    UNTRUSTED_ROLE = 1
 
     SEXUALITY_ROLES = {
 
@@ -41,7 +41,6 @@ class TestServer:
     TRUSTED_ROLE = 1004481875085115573
     VERIFIED_ROLE = 1004481949806645359
     WELCOMER_ROLE = 1004481824438882437
-    UNTRUSTED_ROLE = 1004482401910669414
 
     SEXUALITY_ROLES = {
         "straight": 1004482324815159346,
@@ -154,6 +153,7 @@ QUESTIONS = [
         "required": True,
         "max_length": 200,
         "min_length": 50,
-        "placeholder": "I like cookies."
+        "placeholder": "I like cookies.",
+        "style": discord.TextStyle.long
     }
 ]

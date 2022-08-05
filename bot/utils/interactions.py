@@ -24,7 +24,7 @@ class View(discord.ui.View):
         self.interaction = interaction # So we can respond to it anywhere
         return val
 
-    async def disable(self, msg:discord.Message) -> Union[discord.Message, None]:
+    async def disable(self, msg: discord.Message, respond: bool = True) -> Union[discord.Message, None]:
         """"Disables the children inside of the view"""
         if not [c for c in self.children if not c.disabled]: # if every child is already disabled, we don't need to edit the message again
             return
@@ -32,7 +32,7 @@ class View(discord.ui.View):
         for c in self.children:
             c.disabled = True
 
-        if self.interaction and not self.interaction.response.is_done():
+        if self.interaction and not self.interaction.response.is_done() and respond:
             await self.interaction.response.edit_message(view=self)
         else:
             await msg.edit(view=self)
@@ -68,12 +68,12 @@ class Modal(discord.ui.Modal):
 
         await msg.edit(view=self)
 
-    async def on_submit(self, interaction:discord.Interaction) -> None:
+    async def on_submit(self, interaction: discord.Interaction) -> None:
         """Called when the modal is submitted"""
         for child in self.children:
             self.values.append(child.value)
             
-        await interaction.response.defer()
+        self.interaction = interaction
 
 class Button(discord.ui.Button):
 
