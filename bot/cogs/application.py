@@ -78,6 +78,20 @@ class Application(commands.Cog):
         await channel.send(embed=self._to_embed(interaction.user, answers))
         await modal.interaction.response.send_message("✅ Application submitted. Please be patient while it is reviewed. You will be dmed in case of a decision.", ephemeral=True)
 
+    @discord.app_commands.command()
+    @discord.app_commands.describe(member="The member to give the role to.")
+    async def verify(self, interaction: discord.Interaction, member: discord.Member):
+        """Grant a user the verified role."""
+        if not self.client.server_info.WELCOMER_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("❌ You are not authorised to use this command!", ephemeral=True)
+
+        if self.client.server_info.VERIFIED_ROLE not in [r.id for r in member.roles]:
+            role = self.client.get_guild(self.client.server_info.ID).get_role(self.client.server_info.VERIFIED_ROLE)
+            await member.add_roles(role)
+            await interaction.response.send_message(f"✅ {member.mention} is now verified.", ephemeral=True)
+            await member.send(f"Your application in Kids In The Dark has been reviewed and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
+        else:
+            await interaction.response.send_message(f"{member.mention} is already verified.")
 
 Cog = Application
 

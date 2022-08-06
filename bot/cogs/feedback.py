@@ -40,7 +40,7 @@ class Feedback(commands.Cog):
     
         feedback = modal.children[0].value
         embed = discord.Embed(title="Feedback", description=feedback, color=0x2f3136)
-        embed.set_footer(text=f"Submitted by {interaction.user.name}#{interaction.user.discriminator}")
+        embed.set_footer(text=f"Submitted by {interaction.user}")
         await self.channel.send(embed=embed)
         await modal.interaction.response.send_message("Thank you for your feedback!", ephemeral=True)
 

@@ -58,7 +58,7 @@ async def main():
     session = aiohttp.ClientSession()
     # Create the bot instance.
     bot = Bot(
-        command_prefix="kjewfuhaowifujh",
+        command_prefix="Will " if is_dev() else "Nico ",
         description="KITD's own discord bot",
         intents=discord.Intents.all(),
         session=session

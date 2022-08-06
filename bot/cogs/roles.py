@@ -128,7 +128,7 @@ class Roles(commands.Cog):
                 view = View(interaction.user.id)
                 view.add_item(confirm_button)
                 view.add_item(cancel_button)
-                await interaction.response.send_message("By choosing this role you signal that you need **immediate** serious help. This will ping the will help role. Do you want to proceed?", view=view, ephemeral=True)
+                await interaction.response.send_message("By taking this role, you signal that you are in **immediate danger of hurting yourself or worse**. This will also ping the will help role. Do you wish to proceed?", view=view, ephemeral=True)
 
                 await view.wait()
 
