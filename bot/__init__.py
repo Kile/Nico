@@ -13,7 +13,7 @@ import logging.handlers
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
-logging.getLogger('discord.http').setLevel(logging.INFO)
+logging.getLogger('discord.http').setLevel(logging.ERROR)
 
 handler = logging.handlers.RotatingFileHandler(
     filename='discord.log',

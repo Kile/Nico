@@ -26,10 +26,10 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if not message.author.id == DISBOARD:
+        if message.author.id != DISBOARD:
             return
 
-        if len(message.embeds) > 0 and "\U0001f44d" in message.embeds[0].description:
+        if len(message.embeds) > 0 and ":tumbsup:" in message.embeds[0].description:
             await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They will be awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
