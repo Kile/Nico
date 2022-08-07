@@ -29,7 +29,7 @@ class Events(commands.Cog):
         if message.author.id != DISBOARD:
             return
 
-        if len(message.embeds) > 0 and ":tumbsup:" in message.embeds[0].description:
+        if len(message.embeds) > 0 and ":thumbsup:" in message.embeds[0].description:
             await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They will be awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
