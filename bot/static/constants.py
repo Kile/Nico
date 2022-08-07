@@ -19,9 +19,9 @@ DISBOARD = 302050872383242240
 
 WELCOME_MESSAGE = \
 """ Welcome to Kids In The Dark {}!
-I am Nico, KITD bot. If you're wondering where first to go, check out <#920102551116980226> for information about the server and some roles.
+I am Nico, KITD's own bot. If you're wondering where first to go, check out <#920102551116980226> for information about the server and some roles.
 Wanna check what's new? Check out <#726803975680163920> for the latest updates.
-You can grab some roles by using my `/role` command such as pronouns and sexuality rules.
+You can grab some roles by using my `/role` command such as pronouns and sexuality roles.
 Did you come here to vent? To make vent, advice and other sensitive channels a safe space, you have to apply (using `/apply`) before you can grab roles to access them.
 I hope you have a great time here!
 """
