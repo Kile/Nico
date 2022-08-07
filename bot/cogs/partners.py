@@ -53,7 +53,7 @@ class Partners(commands.Cog):
 
         PARTNERS.insert_one(data)
         await interaction.response.send_message(f"Your partner invite link is: {guild_invite.url}", ephemeral=True)
-        await self.potato_channel.send_message(f"{interaction.user.mention} has registered a new partnership with {invite.guild.name}. They will be awarded a bonus of 10🥔")
+        await self.potato_channel.send(f"{interaction.user.mention} has registered a new partnership with {invite.guild.name}. They will be awarded a bonus of 10🥔")
 
     @partner.command()
     async def top(self, interaction: discord.Interaction):

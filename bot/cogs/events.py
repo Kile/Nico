@@ -30,13 +30,13 @@ class Events(commands.Cog):
             return
 
         if len(message.embeds) > 0 and "\U0001f44d" in message.embeds[0].description:
-            await self.potato_channel.send_message(f"{message.interaction.user.mention} has bumped the server! They will be awarded a bonus of 2🥔")
+            await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They will be awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if member.bot: return
 
-        await self.general_channel.send_message(WELCOME_MESSAGE.format(member.mention))
+        await self.general_channel.send(WELCOME_MESSAGE.format(member.mention))
 
 Cog = Events
 
