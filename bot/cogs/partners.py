@@ -31,7 +31,7 @@ class Partners(commands.Cog):
     @discord.app_commands.describe(partner_invite="The invite link of the partner server")
     async def new(self, interaction: discord.Interaction, partner_invite: str):
         """Register a new partnership and get the url to send them."""
-        if self.client.server_info.PARTNER_MANAGER_ROLE in [r.id for r in interaction.user.roles]:
+        if not self.client.server_info.PARTNER_MANAGER_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("You need to be a partner manager to use this command.", ephemeral=True)
 
         try:
