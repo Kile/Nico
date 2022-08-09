@@ -4,7 +4,7 @@ from discord.ext import commands
 from typing import Optional, Any
 
 from bot.utils.interactions import View, Button
-from bot.static.constants import Sexualities, OtherRoles
+from bot.static.constants import Sexualities, OtherRoles, GUILD_OBJECT
 
 Choice = discord.app_commands.Choice
 
@@ -54,7 +54,7 @@ class Roles(commands.Cog):
     async def cog_load(self):
         print("Loaded roles cog")
 
-    roles = discord.app_commands.Group(name='roles', description="Assign yourself a role")
+    roles = discord.app_commands.Group(name='roles', description="Assign yourself a role", guild_ids=[GUILD_OBJECT.id])
 
     @roles.command()
     @discord.app_commands.describe(sexuality="Your sexuality")

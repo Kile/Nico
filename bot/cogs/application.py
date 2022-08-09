@@ -4,7 +4,7 @@ from discord.ext import commands
 from typing import Union
 
 from bot.utils.interactions import Modal, View, Button
-from bot.static.constants import QUESTIONS
+from bot.static.constants import QUESTIONS, GUILD_OBJECT
 
 class ApplicationModal(Modal):
 
@@ -41,6 +41,7 @@ class Application(commands.Cog):
         return embed
 
     @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
     async def apply(self, interaction: discord.Interaction):
         """Apply for the verified role with this command"""
 
@@ -79,6 +80,7 @@ class Application(commands.Cog):
         await modal.interaction.response.send_message("✅ Application submitted. Please be patient while it is reviewed. You will be dmed in case of a decision.", ephemeral=True)
 
     @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
     @discord.app_commands.describe(member="The member to give the role to.")
     async def verify(self, interaction: discord.Interaction, member: discord.Member):
         """Grant a user the verified role."""

@@ -4,6 +4,8 @@ import discord
 from enum import Enum
 from pymongo import MongoClient
 
+from bot.utils.functions import is_dev
+
 with open("config.json", "r") as config_file:
     config = json.loads(config_file.read())
 
@@ -84,6 +86,9 @@ class TestServer:
 class ServerInfo:
     KITD = KITDServer
     TEST = TestServer
+
+
+GUILD_OBJECT = discord.Object(id=(ServerInfo.TEST.ID if is_dev() else ServerInfo.KITD.ID))
 
 class Sexualities(Enum):
     straight = "804873516713377853"

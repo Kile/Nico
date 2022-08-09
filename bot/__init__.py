@@ -1,12 +1,11 @@
-from . import cogs
-
 import discord
 import aiohttp
-import getopt, sys
 
 from discord.ext import commands
 
-from .static.constants import TOKEN, ServerInfo
+from . import cogs
+from .static.constants import TOKEN, ServerInfo, GUILD_OBJECT
+from .utils.functions import is_dev
 
 import logging
 import logging.handlers
@@ -41,18 +40,8 @@ class Bot(commands.Bot):
 
     async def setup_hook(self):
         await self.load_extension("jishaku")
-        await self.tree.sync()
-
-
-def is_dev() -> bool:
-    """Checks if the bot is run with the --development argument"""
-    raw_arguments = sys.argv[1:]
-
-    arguments, _ = getopt.getopt(raw_arguments, "d", ["development"])
-    for arg, _ in arguments:
-        if arg in ("--development", "-d"):
-            return True
-    return False
+        await self.tree.sync() # No global commands currently, though maybe in the future so leaving it in.
+        await self.tree.sync(guild=GUILD_OBJECT) # Loads the commands for the server.
 
 async def main():
     session = aiohttp.ClientSession()

@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
-from bot.static.constants import PARTNERS
+from bot.static.constants import PARTNERS, GUILD_OBJECT
 
 class Partners(commands.Cog):
 
@@ -25,7 +25,7 @@ class Partners(commands.Cog):
     async def cog_load(self):
         print("Loaded partners cog")
 
-    partner = discord.app_commands.Group(name='partner', description="Commands related to partnerships")
+    partner = discord.app_commands.Group(name='partner', description="Commands related to partnerships", guild_ids=[GUILD_OBJECT.id])
 
     @partner.command()
     @discord.app_commands.describe(partner_invite="The invite link of the partner server")

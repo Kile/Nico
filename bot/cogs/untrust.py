@@ -5,8 +5,8 @@ from datetime import timedelta
 
 from discord.ext import commands
 
-from bot.__init__ import is_dev
-from bot.static.constants import ServerInfo
+from bot.utils.functions import is_dev
+from bot.static.constants import ServerInfo, GUILD_OBJECT
 
 class UntrustView(discord.ui.View):
 
@@ -158,6 +158,7 @@ class Untrust(commands.Cog):
         print("Loaded untrust cog")
 
     @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
     async def untrust(self, interaction: discord.Interaction, target: discord.Member, reason: str = "No reason provided"):
         """Start a vote to timeout a user for 24h."""
         if target == interaction.user:

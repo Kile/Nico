@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from bot.utils.interactions import Modal
-from bot.static.constants import QUESTIONS
+from bot.static.constants import GUILD_OBJECT
 
 class FeedbackModal(Modal):
 
@@ -28,6 +28,7 @@ class Feedback(commands.Cog):
         print("Loaded application cog")
 
     @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
     async def feedback(self, interaction: discord.Interaction):
         """Submit feedback about the server with this command"""
             
