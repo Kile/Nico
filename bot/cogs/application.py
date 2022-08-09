@@ -93,7 +93,7 @@ class Application(commands.Cog):
             await interaction.response.send_message(f"✅ {member.mention} is now verified.", ephemeral=True)
             await member.send(f"Your application in Kids In The Dark has been reviewed and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
         else:
-            await interaction.response.send_message(f"{member.mention} is already verified.")
+            await interaction.response.send_message(f"{member.mention} is already verified.", ephemeral=True)
 
 Cog = Application
 
