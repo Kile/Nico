@@ -30,7 +30,7 @@ class Events(commands.Cog):
             return
 
         if len(message.embeds) > 0 and ":thumbsup:" in message.embeds[0].description:
-            await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They will be awarded a bonus of 2🥔")
+            await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They have been awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

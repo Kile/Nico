@@ -53,11 +53,12 @@ class Partners(commands.Cog):
 
         PARTNERS.insert_one(data)
         await interaction.response.send_message(f"Your partner invite link is: {guild_invite.url}", ephemeral=True)
-        await self.potato_channel.send(f"{interaction.user.mention} has registered a new partnership with {invite.guild.name}. They will be awarded a bonus of 10🥔")
+        await self.potato_channel.send(f"{interaction.user.mention} has registered a new partnership with {invite.guild.name}. They have been awarded a bonus of 10🥔")
 
     @partner.command()
     async def top(self, interaction: discord.Interaction):
         """Displays the top 10 partners in terms of new joins"""
+        await interaction.response.defer() # This command will take more than 3 seconds most likely so we want to make sure discord knows that
         partners = list(PARTNERS.find())
         invites = await self.guild.invites()
 
@@ -79,7 +80,7 @@ class Partners(commands.Cog):
                 "PM responsible: " + str(self.client.get_user(partner["added_by"])),
         )
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     @partner.command()
     @discord.app_commands.describe(user="The user to check the partners of")

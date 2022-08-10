@@ -24,6 +24,10 @@ class Feedback(commands.Cog):
     def channel(self):
         return self.guild.get_channel(self.client.server_info.FEEDBACK_CHANNEL)
 
+    @property
+    def potato_channel(self):
+        return self.guild.get_channel(self.client.server_info.POTATO_BONUS_CHANNEL)
+
     async def cog_load(self):
         print("Loaded application cog")
 
@@ -31,9 +35,6 @@ class Feedback(commands.Cog):
     @discord.app_commands.guilds(GUILD_OBJECT)
     async def feedback(self, interaction: discord.Interaction):
         """Submit feedback about the server with this command"""
-            
-        if interaction.user.is_on_mobile():
-            return await interaction.response.send_message("Due to a discord limitation this command is currently not available on mobile. Please use `/mobile_feedback` instead!", ephemeral=True)
     
         modal = FeedbackModal(interaction.user.id)
         await interaction.response.send_modal(modal)
@@ -43,6 +44,7 @@ class Feedback(commands.Cog):
         embed = discord.Embed(title="Feedback", description=feedback, color=0x2f3136)
         embed.set_footer(text=f"Submitted by {interaction.user}")
         await self.channel.send(embed=embed)
+        await self.potato_channel.send(f"{interaction.user.mention} has left given feedback with `/feedback`. They have been awarded a bonus of 5🥔")
         await modal.interaction.response.send_message("Thank you for your feedback!", ephemeral=True)
 
 Cog = Feedback
