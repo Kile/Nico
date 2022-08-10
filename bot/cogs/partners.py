@@ -72,10 +72,13 @@ class Partners(commands.Cog):
         embed = discord.Embed(title="Top 10 Partners", color=0x2f3136)
 
         for partner in top_partners:
-            partner_invite = await self.client.fetch_invite(partner["partner_invite_link"])
+            try:
+                partner_invite = await self.client.fetch_invite(partner["partner_invite_link"])
+            except discord.NotFound:
+                partner_invite = "Invalid invite"
             
             embed.add_field(
-                name=partner_invite.guild.name, 
+                name=partner_invite.guild.name if not isinstance(partner_invite, str) else partner_invite, 
                 value="Joins: " + str(partner["uses"]) + "\n" + 
                 "PM responsible: " + str(self.client.get_user(partner["added_by"])),
         )
