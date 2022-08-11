@@ -93,6 +93,44 @@ class Partners(commands.Cog):
 
         await interaction.response.send_message(f"{user.name} has added {len(partners)} partner{'s' if len(partners) != 1 else ''}.")
 
+    @partner.command()
+    @discord.app_commands.describe(
+        kitd_invite="The invite to kitd used for the partnership",
+        new_invite="The new invite to the partner server"
+    )
+    async def update(self, interaction: discord.Interaction, kitd_invite: str, new_invite: str):
+        """Updates the invite of a partner"""
+        if not self.client.server_info.PARTNER_MANAGER_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You need to be a partner manager to use this command.", ephemeral=True)
+
+        try:
+            invite = await self.client.fetch_invite(new_invite)
+        except discord.NotFound:
+            return await interaction.response.send_message("Invalid invite link.", ephemeral=True)
+
+        if invite.expires_at:
+            return await interaction.response.send_message("The invite link has to be permanent, this one is temporary.", ephemeral=True)
+
+        if not kitd_invite in [inv.url if "discord.gg" in kitd_invite else inv.code for inv in await self.guild.invites()]:
+            return await interaction.response.send_message("Invalid kitd invite link.", ephemeral=True)
+
+        PARTNERS.update_one({"own_invite_link": kitd_invite}, {"$set": {"partner_invite_link": new_invite}})
+
+        await interaction.response.send_message(f"Successfully updated invite link for {invite.guild.name}.", ephemeral=True)
+
+    @partner.command()
+    async def delete(self, interaction: discord.Interaction, kitd_invite: str):
+        """Deletes a partner"""
+        if not self.client.server_info.PARTNER_MANAGER_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You need to be a partner manager to use this command.", ephemeral=True)
+
+        if not kitd_invite in [inv.url if "discord.gg" in kitd_invite else inv.code for inv in await self.guild.invites()]:
+            return await interaction.response.send_message("Invalid kitd invite link.", ephemeral=True)
+
+        PARTNERS.delete_one({"own_invite_link": kitd_invite})
+
+        await interaction.response.send_message(f"Successfully deleted partner with invite: {kitd_invite}.", ephemeral=True)
+
 Cog = Partners
 
 async def setup(client):
