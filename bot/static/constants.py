@@ -60,6 +60,7 @@ points = points x active boost
 if you are a server booster:
 points = points x 1.2
 ```
+[Source code](https://github.com/Kile/Nico/blob/main/bot/cogs/events.py#L79-L104)
 
 **How boosts work:**
 There is a 1% chance for boosters to pop up in chat as a response to a message. If they do the first to click the "Claim" button recieves it.
@@ -67,6 +68,9 @@ You can also use `/event buy` to buy a booster.
 If someone has been nice to you, every 24h you can gift someone a x1.5 booster with `/event karma <user>`.
 
 Boosts are active for 1h
+
+**What does karma do?**
+Once every 24h you can give someone a booster with `/event karma <user>`. However karma is also counted seperately and the top karma recievers will get a prize (if they are not already in the top points earners).
 
 **What are diminishing returns?**
 As you continue to send messages, eventuall what you get out of it will be less than 100% (diminishing returns).

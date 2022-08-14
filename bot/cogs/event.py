@@ -253,7 +253,7 @@ class Event(commands.Cog):
             "thumbnail": {"url": self.client.user.avatar.url}
         })
     
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @event.command()
     async def end(self, interaction: discord.Interaction):
