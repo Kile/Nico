@@ -13,7 +13,7 @@ class FeedbackModal(Modal):
 
 class Feedback(commands.Cog):
 
-    def __init__(self, client):
+    def __init__(self, client: commands.Bot):
         self.client = client
         
     @property
@@ -29,7 +29,7 @@ class Feedback(commands.Cog):
         return self.guild.get_channel(self.client.server_info.POTATO_BONUS_CHANNEL)
 
     async def cog_load(self):
-        print("Loaded application cog")
+        print("Loaded feedback cog")
 
     @discord.app_commands.command()
     @discord.app_commands.guilds(GUILD_OBJECT)

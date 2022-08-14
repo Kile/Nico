@@ -4,7 +4,7 @@ from typing import Union, List
 
 class View(discord.ui.View):
     """Subclassing this for buttons enabled us to not have to define interaction_check anymore, also not if we want a select menu"""
-    def __init__(self, user_id:Union[int, List[int]], **kwargs):
+    def __init__(self, user_id: Union[int, List[int]] = None, **kwargs):
         super().__init__(**kwargs)
         self.user_id = user_id
         self.value = None
@@ -15,6 +15,8 @@ class View(discord.ui.View):
         self.timed_out = True
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if not self.user_id: return True 
+        
         if isinstance(self.user_id, int):
             if not (val := interaction.user.id == self.user_id):
                 await interaction.response.defer()

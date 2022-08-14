@@ -7,7 +7,7 @@ from bot.static.constants import PARTNERS, GUILD_OBJECT
 
 class Partners(commands.Cog):
 
-    def __init__(self, client):
+    def __init__(self, client: commands.Bot):
         self.client = client
 
     @property
@@ -119,6 +119,7 @@ class Partners(commands.Cog):
         await interaction.response.send_message(f"Successfully updated invite link for {invite.guild.name}.", ephemeral=True)
 
     @partner.command()
+    @discord.app_commands.describe(kitd_invite="The invite to kitd used for the partnership")
     async def delete(self, interaction: discord.Interaction, kitd_invite: str):
         """Deletes a partner"""
         if not self.client.server_info.PARTNER_MANAGER_ROLE in [r.id for r in interaction.user.roles]:
@@ -132,6 +133,3 @@ class Partners(commands.Cog):
         await interaction.response.send_message(f"Successfully deleted partner with invite: {kitd_invite}.", ephemeral=True)
 
 Cog = Partners
-
-async def setup(client):
-    await client.add_cog(Partners(client))

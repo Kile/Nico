@@ -37,7 +37,7 @@ class Roles(commands.Cog):
         Choice(name="need help", value="712372007399849985")
     ]
 
-    def __init__(self, client):
+    def __init__(self, client: commands.Bot):
         self.client = client
         
     @property
@@ -145,6 +145,3 @@ class Roles(commands.Cog):
             return await interaction.response.send_message(f"You have been assigned the {role.name} role!")
 
 Cog = Roles
-
-async def setup(client):
-    await client.add_cog(Roles(client))

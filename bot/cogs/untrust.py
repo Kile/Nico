@@ -75,7 +75,7 @@ class UntrustView(discord.ui.View):
 
         return True
         
-    @discord.ui.button(label="Untrust (0/3)", style=discord.ButtonStyle.red)
+    @discord.ui.button(label="Untrust (0/2)", style=discord.ButtonStyle.red)
     async def untrust(self, interaction: discord.Interaction, _: discord.ui.Button):
 
         if interaction.user.id in self.votes["yes"]:
@@ -85,9 +85,9 @@ class UntrustView(discord.ui.View):
 
             if interaction.user.id in self.votes["no"]: # If untrust is pressed while user has pressed abort before, their abort vote is removed
                 self.votes["no"].remove(interaction.user.id)
-                self.children[1].label = f"Abort ({len(self.votes['no'])}/3)"
+                self.children[1].label = f"Abort ({len(self.votes['no'])}/2)"
 
-        if len(self.votes["yes"]) >= 3:
+        if len(self.votes["yes"]) >= 2:
             await self.target.timeout(timedelta(days=1)) # Timeout user for 24 hours
             await interaction.response.edit_message(content=f"Successfull vote to timeout user! {self.target.mention} has been timeouted for 24h", view=None, embeds=[])
             embed = discord.Embed.from_dict({
@@ -106,10 +106,10 @@ class UntrustView(discord.ui.View):
             return self.stop()
 
         else:
-            self.children[0].label = f"Untrust ({len(self.votes['yes'])}/3)"
+            self.children[0].label = f"Untrust ({len(self.votes['yes'])}/2)"
             await interaction.response.edit_message(view=self)
 
-    @discord.ui.button(label="Abort (0/3)", style=discord.ButtonStyle.green)
+    @discord.ui.button(label="Abort (0/2)", style=discord.ButtonStyle.green)
     async def abort(self, interaction: discord.Interaction, _: discord.ui.Button):
 
         if interaction.user.id in self.votes["no"]:
@@ -118,9 +118,9 @@ class UntrustView(discord.ui.View):
             self.votes["no"].append(interaction.user.id)
             if interaction.user.id in self.votes["yes"]: # If abort is pressed while user has pressed untrust before, their untrust vote is removed
                 self.votes["yes"].remove(interaction.user.id)
-                self.children[0].label = f"Untrust ({len(self.votes['yes'])}/3)"
+                self.children[0].label = f"Untrust ({len(self.votes['yes'])}/2)"
 
-        if len(self.votes["no"]) >= 3:
+        if len(self.votes["no"]) >= 2:
             await interaction.response.edit_message(content=f"Unsuccessfull vote to timeout user! Vote to timeout {self.target.mention} has been aborted", view=None, embeds=[])
             embed = discord.Embed.from_dict({
                 "title": "Unsuccessfull untrust vote",
@@ -138,12 +138,12 @@ class UntrustView(discord.ui.View):
             return self.stop()
 
         else:
-            self.children[1].label = f"Abort ({len(self.votes['no'])}/3)"
+            self.children[1].label = f"Abort ({len(self.votes['no'])}/2)"
             await interaction.response.edit_message(view=self)
 
 class Untrust(commands.Cog):
 
-    def __init__(self, client):
+    def __init__(self, client: commands.Bot):
         self.client = client
 
     @property
@@ -190,6 +190,3 @@ class Untrust(commands.Cog):
         await view.disable(view.msg)
 
 Cog = Untrust
-
-async def setup(client):
-    await client.add_cog(Untrust(client))

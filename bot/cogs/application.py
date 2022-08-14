@@ -22,7 +22,7 @@ class ApplicationModal(Modal):
 
 class Application(commands.Cog):
 
-    def __init__(self, client):
+    def __init__(self, client: commands.Bot):
         self.client = client
 
     async def cog_load(self):
@@ -96,6 +96,3 @@ class Application(commands.Cog):
             await interaction.response.send_message(f"{member.mention} is already verified.", ephemeral=True)
 
 Cog = Application
-
-async def setup(client):
-    await client.add_cog(Application(client))

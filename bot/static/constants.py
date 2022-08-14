@@ -13,20 +13,102 @@ TOKEN = config["token"]
 
 CLUSTER = MongoClient(config['mongo'])
 
-DB = CLUSTER['Nico']
+DB = CLUSTER["Will" if is_dev() else "Nico"]
 
-PARTNERS = DB['partners']
+PARTNERS = DB["partners"]
+EVENT = DB["event"]
+CONSTANTS = DB["constants"]
 
 DISBOARD = 302050872383242240
 
+ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]
+
 WELCOME_MESSAGE = \
 """ Welcome to Kids In The Dark {}!
-I am Nico, KITD's own bot. If you're wondering where first to go, check out <#920102551116980226> for information about the server and some roles.
-Wanna check what's new? Check out <#726803975680163920> for the latest updates.
-You can grab some roles by using my `/role` command such as pronouns and sexuality roles.
-Did you come here to vent? To make vent, advice and other sensitive channels a safe space, you have to apply (using `/apply`) before you can grab roles to access them.
-I hope you have a great time here!
+I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#920102551116980226>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about <#710941242963263638> and <#920102551116980226> to ensure you have read them.\nYour answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
+
+Not sure what to do? Something isn't working? Need help?
+Feel free to dm a staff member at any point to ask for help.
+
+I hope you enjoy your stay!
 """
+
+DID_INFO = "This is an explanation about the purpose of the <@466378653216014359> bot, why some people talking appear as bots and what DID is. DID is short for Dissociative Identity Disorder, a disorder that is caused by trauma and splits your personality up in different \"alters\". Those alters are their Person on their own with their interests, personality, gender, etc. This is where <@466378653216014359> comes in. One alter always has control over the body and if the control changes, that is called a \"switch\". For every alter to feel more like themselves with just one discord account, they tell the bot which alter currently has the control and depending on that, the bot resends their messages with a different name and Profile Picture. So if you do not have DID, don't use <@466378653216014359>, and also this explains why sometimes \"bots talk\".\n[Learn more about DID](https://en.wikipedia.org/wiki/Dissociative_identity_disorder)"
+
+EVENT_EXPLANATION = \
+f"""This is a short explaination going over how the event works.
+
+**How points are awarded:**
+Every message sent 10 seconds after your last one will get you points.
+
+The base points per message are 10
+
+The points are modified by the following factors:
+
+```
+points = 10
+
+points = points x (1 + (0.1 x (streak - 1))
+points = points x (0.1 x diminishing returns)
+
+if it has been 10+ minutes since the last message in the channel:
+points = points x 2
+
+if you have a booster:
+points = points x active boost
+
+if you are a server booster:
+points = points x 1.2
+```
+
+**How boosts work:**
+There is a 1% chance for boosters to pop up in chat as a response to a message. If they do the first to click the "Claim" button recieves it.
+You can also use `/event buy` to buy a booster.
+If someone has been nice to you, every 24h you can gift someone a x1.5 booster with `/event karma <user>`.
+
+Boosts are active for 1h
+
+**What are diminishing returns?**
+As you continue to send messages, eventuall what you get out of it will be less than 100% (diminishing returns).
+This is done so that people who haven't been able to send too many messages still have a chance to catch up to the leaders.
+
+**What are streaks?**
+Each consequtive day you send at least 10 messages will increase your streak. However if you miss a day it will be reset.
+
+**What requirements do I need to meet to be in the random draw?**
+Your points must be more than or equal to the average points of the server.
+"""
+
+SERVER_QUESTIONS = [
+    {
+        "question": "What command do you use to gain roles?",
+        "answer": ["/roles", "roles", "role", "/role"]
+    },
+    {
+        "question": "How do you get access to vent channels?",
+        "answer": ["apply", "/apply", "by using /apply", "by applying", "by using apply", "with /apply", "with apply"]
+    },
+    {
+        "question": "What is the maximum age for the server?",
+        "answer": ["22", "22 years", "22 years old", "22 y", "22y", "twenty two", "twenty two years", "twenty two years old", "twentytwo", "twenty-two"]
+    },
+    {
+        "question": "You will be tempbanned after how many warns?",
+        "answer": ["3", "3 warns", "three warns", "three"]
+    },
+    {
+        "question": "What command do you use for info about DID?",
+        "answer": ["did", "/did"]
+    },
+    {
+        "question": "What to do against troll as member?",
+        "answer": ["untrust", "/untust", "use untrust", "use /untrust", "report"]
+    },
+    {
+        "question": "Are you allowed to swear in #general?",
+        "answer": ["no", "no i am not", "not allowed", "not", "with censor", "only when censoring", "censor"]
+    }
+]
 
 class KITDServer:
     ID = 710871326557995079
@@ -37,21 +119,18 @@ class KITDServer:
     SOS_CHANNEL = 712384341442822184
     GENERAL_CHANNEL = 710873588646936576
     POTATO_BONUS_CHANNEL = 1005608836486406254
+    WELCOME_CHANNEL = 726053325623263293
+    EVENT_DROP_CHANNELS = [710873588646936576, 712132952896831488, 712049873674960906, 729161403713191997, 714821065897148496, 739525325267927082, 712049825583202345, 712408301467598928, 712476683394875412, 753007572579254283, 765690813962518558]
+    EVENT_EXCLUDED_CHANNELS = [739525325267927082, 714567214187020368, 739218822065815592, 1005619816775831602, 726170868924809216, 716453938966036490, 725058055275937882]
+    UPDATE_CHANNEL = 726803975680163920
 
+    EVENT_EXCLUDED_MEMBERS = [582154877820600340]
     TRUSTED_ROLE = 716392797535469649
     VERIFIED_ROLE = 919753805174812723
     WELCOMER_ROLE = 729743673746522242
     PARTNER_MANAGER_ROLE = 1005612186875473952
-
-    SEXUALITY_ROLES = {
-
-    }
-    PRONOUN_ROLES = {
-
-    }
-    HELP_ROLES = {
-
-    }
+    NEW_ROLE = 1007969193125228654
+    NEED_HELP_ROLE = 712372007399849985
 
 class TestServer:
     ID = 843442230547054602
@@ -62,26 +141,18 @@ class TestServer:
     SOS_CHANNEL = 1004885079308370000
     GENERAL_CHANNEL = 843442230547054605
     POTATO_BONUS_CHANNEL = 1005608636913045504
+    WELCOME_CHANNEL = 1007977199153987686
+    EVENT_DROP_CHANNELS = [843442230547054605]
+    EVENT_EXCLUDED_CHANNELS = []
+    UPDATE_CHANNEL = 843442230547054605
 
+    EVENT_EXCLUDED_MEMBERS = [582154877820600340]
     TRUSTED_ROLE = 1004481875085115573
     VERIFIED_ROLE = 1004481949806645359
     WELCOMER_ROLE = 1004481824438882437
     PARTNER_MANAGER_ROLE = 1005612348041609216
-
-    SEXUALITY_ROLES = {
-        "straight": 1004482324815159346,
-        "questioning": 1004482347292434484,
-        "gay": 1004482379676651600
-    }
-    PRONOUN_ROLES = {
-        "he/him": 1004482233769398312,
-        "she/her": 1004482261460205610,
-        "they/them": 1004482293726973982,
-    }
-    HELP_ROLES = {
-        "1": 1004482494286016553,
-        "2": 1004482549017497680
-    }
+    NEW_ROLE = 1007975948639027262
+    NEED_HELP_ROLE = 1008443945308655716
 
 class ServerInfo:
     KITD = KITDServer
