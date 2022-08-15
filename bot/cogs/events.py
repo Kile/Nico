@@ -24,19 +24,19 @@ class Events(commands.Cog):
         self.startup = datetime.now()
 
     @property
-    def guild(self):
+    def guild(self) -> discord.Guild:
         return self.client.get_guild(self.client.server_info.ID)
 
     @property
-    def potato_channel(self):
+    def potato_channel(self) -> discord.TextChannel:
         return self.guild.get_channel(self.client.server_info.POTATO_BONUS_CHANNEL)
 
     @property
-    def general_channel(self):
+    def general_channel(self) -> discord.TextChannel:
         return self.guild.get_channel(self.client.server_info.GENERAL_CHANNEL)
 
     @property
-    def sos_role(self):
+    def sos_role(self) -> discord.Role:
         return self.guild.get_role(self.client.server_info.NEED_HELP_ROLE)
 
     async def cog_load(self):

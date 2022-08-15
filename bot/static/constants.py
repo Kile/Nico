@@ -25,7 +25,9 @@ ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]
 
 WELCOME_MESSAGE = \
 """ Welcome to Kids In The Dark {}!
-I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#920102551116980226>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about <#710941242963263638> and <#920102551116980226> to ensure you have read them.\nYour answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
+I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#920102551116980226>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about <#710941242963263638> and <#920102551116980226> to ensure you have read them.
+
+Your answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
 
 Not sure what to do? Something isn't working? Need help?
 Feel free to dm a staff member at any point to ask for help.
@@ -127,6 +129,7 @@ class KITDServer:
     EVENT_DROP_CHANNELS = [710873588646936576, 712132952896831488, 712049873674960906, 729161403713191997, 714821065897148496, 739525325267927082, 712049825583202345, 712408301467598928, 712476683394875412, 753007572579254283, 765690813962518558]
     EVENT_EXCLUDED_CHANNELS = [739525325267927082, 714567214187020368, 739218822065815592, 1005619816775831602, 726170868924809216, 716453938966036490, 725058055275937882]
     UPDATE_CHANNEL = 726803975680163920
+    INFORMATION_CHANNEL = 711707649829240972
 
     EVENT_EXCLUDED_MEMBERS = [582154877820600340]
     TRUSTED_ROLE = 716392797535469649
@@ -149,6 +152,7 @@ class TestServer:
     EVENT_DROP_CHANNELS = [843442230547054605]
     EVENT_EXCLUDED_CHANNELS = []
     UPDATE_CHANNEL = 843442230547054605
+    INFORMATION_CHANNEL = 1008840542580379792
 
     EVENT_EXCLUDED_MEMBERS = [582154877820600340]
     TRUSTED_ROLE = 1004481875085115573

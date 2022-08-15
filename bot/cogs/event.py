@@ -34,7 +34,7 @@ class Event(commands.Cog):
         }
 
     @property
-    def guild(self):
+    def guild(self) -> discord.Guild:
         return self.client.get_guild(self.client.server_info.ID)
 
     async def cog_load(self):

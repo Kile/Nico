@@ -147,11 +147,11 @@ class Untrust(commands.Cog):
         self.client = client
 
     @property
-    def guild(self):
+    def guild(self) -> discord.Guild:
         return self.client.get_guild(self.client.server_info.ID)
 
     @property
-    def channel(self):
+    def channel(self) -> discord.TextChannel:
         return self.guild.get_channel(self.client.server_info.UNTRUSTED_CHANNEL)
 
     async def cog_load(self):

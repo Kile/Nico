@@ -21,11 +21,11 @@ class Various(commands.Cog):
         print("Loaded various cog")
 
     @property
-    def guild(self):
+    def guild(self) -> discord.Guild:
         return self.client.get_guild(self.client.server_info.ID)
 
     @property
-    def update_channel(self):
+    def update_channel(self) -> discord.TextChannel:
         return self.guild.get_channel(self.client.server_info.UPDATE_CHANNEL)
 
     @discord.app_commands.command()
