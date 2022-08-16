@@ -22,7 +22,8 @@ class Owner(commands.Cog):
 
         menu = discord.app_commands.ContextMenu(
             name="edit",
-            callback=self.edit
+            callback=self.edit,
+            guild_ids=[GUILD_OBJECT.id]
             # type=discord.AppCommandType.message
         )
 

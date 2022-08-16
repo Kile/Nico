@@ -96,7 +96,7 @@ class Member:
             if len(self.messages_a_day) == pos+1: # last element in list
                 break
 
-            time_diff = key - datetime.fromisoformat(list(self.messages_a_day)[::-1][pos + 1])
+            time_diff = datetime.fromisoformat(key) - datetime.fromisoformat(list(self.messages_a_day)[::-1][pos + 1])
 
             if time_diff > timedelta(days=1) and time_diff < timedelta(days=2):
                 if val > self.REQUIRED_MESSAGES_A_DAY:
