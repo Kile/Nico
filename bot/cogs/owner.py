@@ -57,7 +57,7 @@ class Owner(commands.Cog):
         if modal.children[3]:
             try:
                 embed.colour = discord.Colour.from_str(modal.children[3].value)
-            except ValueError:
+            except (ValueError, IndexError):
                 embed.colour = None # If the colour is not valid I don't want all the other changes to be lost, so I just ignore it
 
         embed.title = modal.children[0].value
