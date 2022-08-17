@@ -102,6 +102,9 @@ class Event(commands.Cog):
 
         member_info = Member(member.id)
 
+        points_rank = ("#" + str(member_info.points_rank)) if member_info.points_rank else "Not ranket yet"
+        karma_rank = ("#" + str(member_info.karma_rank)) if member_info.karma_rank else "Not ranket yet"
+
         embed = discord.Embed.from_dict({
             "title": f"{member.name}'s Stats",
             "fields": [
@@ -133,6 +136,10 @@ class Event(commands.Cog):
                 {
                     "name": "Karma given",
                     "value": "**{}**".format(len(member_info.karma_given_to)),
+                },
+                {
+                    "name": "Ranks",
+                    "value": "**Points**: {}\n**Karma**: {}".format(points_rank, karma_rank),
                 }
             ],
             "color": 0x2f3136,
@@ -185,6 +192,9 @@ class Event(commands.Cog):
 
         if member_info.karma_cooldown and datetime.now() - member_info.karma_cooldown < timedelta(days=1):
             return await interaction.response.send_message(f"You can't give someone a boost yet! You can give someone a boost every 24 hours. You can do it the next time <t:{int((member_info.karma_cooldown+timedelta(days=1)).timestamp())}:R>", ephemeral=True)
+
+        if other.karma_given_to and interaction.user.id == other.karma_given_to[-1]:
+            return await interaction.response.send_message("You can't give someone karma who has last given you karma as karma trading or karma to thank for karma is not allowed!", ephemeral=True)
 
         if other.better_booster_active(1.5):
             return await interaction.response.send_message(f"{member.name} already has a better boost active! You have to wait until their boost runs out <t:{int((other.booster['time']+timedelta(hours=1)).timestamp())}:R>", ephemeral=True)

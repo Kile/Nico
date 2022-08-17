@@ -51,6 +51,18 @@ class Member:
 
         self.cache[user_id] = self
 
+    @property
+    def karma_rank(self) -> int:
+        """Returns the current position the user is at in the server in terms of karma"""
+        all = [x["_id"] for x in self.top_karma(10000)] # Slightly hacky but I cannot access guild members from here
+        return (all.index(self.id) + 1) if self.id in all else 0
+
+    @property
+    def points_rank(self) -> int:
+        """Returns the current position the user is at in the server in terms of points"""
+        all = [x["_id"] for x in self.top_members(10000)] # Slightly hacky but I cannot access guild members from here
+        return (all.index(self.id) + 1) if self.id in all else 0
+
     @classmethod
     def clear_all(cls):
         """Removes all entries from the database"""
