@@ -110,7 +110,7 @@ class Events(commands.Cog):
 
             self.last_messages_cache[message.channel.id] = datetime.now()
 
-            if message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and randint(1, 1000) == 1: # 1% Chance of booster dropping
+            if message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and randint(1, 10000) == 1: # 0.01% Chance of booster dropping
                 booster = choices([2, 3, 4], weights=[0.6, 0.3, 0.1], k=1)[0] # Choose a random booster
                 view = View()
                 button = Button(label="Claim", style=discord.ButtonStyle.green)
