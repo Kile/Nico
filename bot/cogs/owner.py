@@ -79,6 +79,7 @@ class Owner(commands.Cog):
 
         embed_2.title = modal.children[0].value
         embed_2.description = modal.children[1].value
+        embed_2.set_image(url=None)
 
         embed_1.set_image(url=modal.children[2].value) # Setting the image to embed_1
 
