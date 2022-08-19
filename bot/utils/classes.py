@@ -38,7 +38,7 @@ class Member:
         self.messages_a_day : Dict[str, int] = data["messages_a_day"]
         self.last_messages : Dict[int, datetime] = data["last_messages"]
         self.points : int = data["points"]
-        self.karma : int = 0 
+        self.karma : int = data["karma"]
         self.karma_given_to : List[int] = data["karma_given_to"]
         self.gamble_cooldown : datetime = data["gamble_cooldown"]
         self.karma_cooldown : datetime = data["karma_cooldown"]
@@ -80,9 +80,9 @@ class Member:
         return EVENT.find().sort("points", -1).limit(amount)
 
     @classmethod
-    def top_karma(cls, amount: int = 3):
+    def top_karma(cls, amount: int = 3, mirror_number: bool = True):
         """Returns the top amount of karma"""
-        top_members = [m["_id"] for m in cls.top_members(amount)]
+        top_members = [m["_id"] for m in cls.top_members(amount if mirror_number else 3)]
         return [m for m in EVENT.find().sort("karma", -1) if not  m["_id"] in top_members][:amount]
 
     @classmethod
