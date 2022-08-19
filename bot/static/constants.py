@@ -25,7 +25,7 @@ ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]
 
 WELCOME_MESSAGE = \
 """ Welcome to Kids In The Dark **{}**!
-I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#920102551116980226>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about <#710941242963263638> and <#920102551116980226> to ensure you have read them.
+I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#711707649829240972>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about what is explained in those channels to ensure you have read them.
 
 Your answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
 
