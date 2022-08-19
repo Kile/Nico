@@ -14,12 +14,12 @@ class UpdateModal(Modal):
 
 class EmbedModal(Modal):
 
-    def __init__(self, user_id: int, current_embed: discord.Embed):
+    def __init__(self, user_id: int, current_embed: discord.Embed, current_image_embed: discord.Embed):
         super().__init__(user_id, title="Feedback form")
 
         self.add_item(discord.ui.TextInput(label="Title", default=current_embed.title, required=True, max_length=256, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Description", default=current_embed.description, required=True, max_length=4000, style=discord.TextStyle.long))
-        self.add_item(discord.ui.TextInput(label="Image url", default=current_embed.image.url if current_embed.image else None, required=False, style=discord.TextStyle.short))
+        self.add_item(discord.ui.TextInput(label="Image url", default=current_image_embed.image.url if current_image_embed.image else None, required=False, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Colour", default=str(current_embed.colour) if current_embed.colour else None, required=False, style=discord.TextStyle.short))
 
 class Owner(commands.Cog):
@@ -56,23 +56,36 @@ class Owner(commands.Cog):
         if not message.embeds:
             return await interaction.response.send_message("Message does not have an embed", ephemeral=True)
 
-        embed: discord.Embed = message.embeds[0]
-        modal = EmbedModal(interaction.user.id, embed)
+        if len(message.embeds) < 2:
+            embed_1: discord.Embed = discord.Embed(title="", description="")
+            embed_1.set_image(url=message.embeds[0].image.url)
+            embed_2: discord.Embed = message.embeds[0]
+        else:
+            embed_1: discord.Embed = message.embeds[0]
+            embed_2: discord.Embed = message.embeds[1]
+
+        modal = EmbedModal(interaction.user.id, embed_2, embed_1)
 
         await interaction.response.send_modal(modal)
         await modal.wait()
 
         if modal.children[3]:
             try:
-                embed.colour = discord.Colour.from_str(modal.children[3].value)
+                embed_1.colour = discord.Colour.from_str(modal.children[3].value)
+                embed_2.colour = discord.Colour.from_str(modal.children[3].value)
             except (ValueError, IndexError):
-                embed.colour = None # If the colour is not valid I don't want all the other changes to be lost, so I just ignore it
+                embed_1.colour = None # If the colour is not valid I don't want all the other changes to be lost, so I just ignore it
+                embed_2.colour = None
 
-        embed.title = modal.children[0].value
-        embed.description = modal.children[1].value
-        embed.set_image(url=modal.children[2].value)
+        embed_2.title = modal.children[0].value
+        embed_2.description = modal.children[1].value
 
-        await message.edit(embed=embed)
+        embed_1.set_image(url=modal.children[2].value) # Setting the image to embed_1
+
+        embed_1.title = "" # Clear title and description of image embed
+        embed_1.description = ""
+
+        await message.edit(embeds=[embed_1, embed_2])
 
         await modal.interaction.response.send_message("Message updated", ephemeral=True)
 
