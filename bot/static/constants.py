@@ -188,6 +188,7 @@ class OtherRoles(Enum):
     updates = "1004871752037453866"
     programmer = "733339593486893176"
     discussion = "727584396986810408"
+    qotd = "1010663180596428821"
 
 
 
