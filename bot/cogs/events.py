@@ -94,7 +94,7 @@ class Events(commands.Cog):
 
         base_points *= member.booster["times"] if member.booster else 1 # Multiply points by booster multiplier if booster is active
 
-        base_points *= 1.2 if self.guild.get_member(member.id).premium_since else 1 # Give server booster a 1.2x bonus
+        base_points *= 1.2 if message.author.premium_since else 1 # Give server booster a 1.2x bonus
 
         base_points *= member.diminishing_returns # Decrease points for diminishing returns
 

@@ -119,7 +119,7 @@ class Event(commands.Cog):
                 },
                 {
                     "name": "Last message sent",
-                    "value": "<t:{}:R>".format(int(max([list(member_info.last_messages.values())])[0].timestamp())) if member_info.last_messages else "Never",
+                    "value": "<t:{}:R>".format(int(member_info.last_message_at.timestamp())) if member_info.last_message_at else "Never",
                 },
                 {
                     "name": "Day of messaging streak :fire:",

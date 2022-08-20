@@ -109,13 +109,14 @@ class Member:
                 break
 
             time_diff = datetime.fromisoformat(key) - datetime.fromisoformat(list(self.messages_a_day)[::-1][pos + 1])
-
-            if time_diff > timedelta(days=1) and time_diff < timedelta(days=2):
+            
+            if time_diff > timedelta(days=1) and time_diff < timedelta(days=2) and list(self.messages_a_day.values())[::-1][pos + 1] > self.REQUIRED_MESSAGES_A_DAY:
                 if val > self.REQUIRED_MESSAGES_A_DAY:
                     count += 1 # Streak is going
                     continue
-
-            break
+                # Streak is still going, but not enough messages were sent yet to increase it
+            else:
+                break
 
         return count
 
@@ -128,6 +129,11 @@ class Member:
     def can_gamble(self) -> bool:
         """Returns whether the user can gamble"""
         return True if not self.gamble_cooldown else datetime.now() - self.gamble_cooldown > timedelta(minutes=20)
+
+    @property
+    def last_message_at(self) -> Union[datetime, None]:
+        """Returns the time of the last message the user sent"""
+        return self.last_messages[min(self.last_messages.keys())] if self.last_messages else None
 
     def better_booster_active(self, booster: int) -> Union[bool, int]:
         """Returns whether the user has a better booster active"""
