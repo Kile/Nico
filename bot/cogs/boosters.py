@@ -52,7 +52,7 @@ class Boosters(commands.Cog):
     @discord.app_commands.describe(image="The image to put the logo over", image_url="The url of the image to put the logo over")
     async def logo(self, interaction: discord.Interaction, image: discord.Attachment = None, image_url: str = None):
         """Gives you the logo of the server"""
-        if not interaction.user.premium_since:
+        if not interaction.user.premium_since and not self.client.is_dev:
             return await interaction.response.send_message("You must be a booster to use this command")
 
         if not image and not image_url:
@@ -66,8 +66,10 @@ class Boosters(commands.Cog):
             except (InvalidURL, ClientResponseError):
                 return await interaction.response.send_message("Invalid url!", ephemeral=True)
 
+        await interaction.response.defer()
+
         resut = self._overlay(image_bytes)
 
-        await interaction.response.send_message(file=discord.File(resut, filename="logo.gif"))
+        await interaction.followup.send(file=discord.File(resut, filename="logo.gif"))
 
 Cog = Boosters
