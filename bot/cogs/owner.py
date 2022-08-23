@@ -111,7 +111,7 @@ class Owner(commands.Cog):
                 "url": self.update_banner_url
             },
         })
-        await self.update_channel.send(content="<@1004871752037453866>", embed=embed)
+        await self.update_channel.send(content="<@&1004871752037453866>", embed=embed)
         await modal.interaction.response.send_message(":white_check_mark: Update published!", ephemeral=True)
 
 Cog = Owner
