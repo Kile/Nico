@@ -123,7 +123,8 @@ class Member:
     @property
     def diminishing_returns(self) -> float:
         """Calculates a number by which a users points are multiplied which decreases as they get more points"""
-        return 1 if self.points == 0 else (self.points/10) ** (-1.46218 * (10 ** -9)) # This works out to 0.9 when user points are 30 000
+        C = -1.46218 * (10 ** -9)
+        return 1 if self.points == 0 else (self.points/10)**(C*((self.points/10)**2)) # This works out to 0.9 when user points are 30 000
 
     @property
     def can_gamble(self) -> bool:

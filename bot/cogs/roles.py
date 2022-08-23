@@ -4,7 +4,7 @@ from discord.ext import commands
 from typing import Optional, Any
 
 from bot.utils.interactions import View, Button
-from bot.static.constants import Sexualities, OtherRoles, GUILD_OBJECT
+from bot.static.constants import Sexualities, Romantic, GUILD_OBJECT
 
 Choice = discord.app_commands.Choice
 
@@ -35,6 +35,15 @@ class Roles(commands.Cog):
         Choice(name="vent access", value="743963300060069958"),
         Choice(name="advice access", value="743963359946473552"),
         Choice(name="need help", value="712372007399849985")
+    ]
+
+    _other_roles = [
+        Choice(name="events", value="743963214127300749"),
+        Choice(name="updates", value="1004871752037453866"),
+        Choice(name="programmer", value="733339593486893176"),
+        Choice(name="discussion", value="727584396986810408"),
+        Choice(name="qotd", value="1010663180596428821"),
+        Choice(name="chat revive", value="1011764789128744970")
     ]
 
     def __init__(self, client: commands.Bot):
@@ -71,6 +80,22 @@ class Roles(commands.Cog):
         
         await interaction.user.add_roles(self.guild.get_role(int(sexuality.value)))
         await interaction.response.send_message(f"You have been assigned the {sexuality.name} role!")
+
+    @roles.command()
+    @discord.app_commands.describe(attraction="Your other role")
+    async def romantic(self, interaction: discord.Integration, attraction: Romantic):
+        """Pick a role showing what your romantic attraction is"""
+        if int(attraction.value) in [r.id for r in interaction.user.roles]:
+            await interaction.user.remove_roles(self.guild.get_role(int(attraction.value)))
+            # This means the user wants to remove the role
+            return await interaction.response.send_message(f"You have removed the {attraction.name} role!")
+
+        if (intercept := self.intercept([r.id for r in interaction.user.roles], [int(r.value) for r in Sexualities])):
+            await interaction.user.remove_roles(self.guild.get_role(intercept))
+            # You can only have one romantic role, so it removes your current one
+        
+        await interaction.user.add_roles(self.guild.get_role(int(attraction.value)))
+        await interaction.response.send_message(f"You have been assigned the {attraction.name} role!")
 
     @roles.command()
     @discord.app_commands.choices(
@@ -111,8 +136,11 @@ class Roles(commands.Cog):
         await interaction.response.send_message(f"You have been assigned the {option.name} role!")
 
     @roles.command()
+    @discord.app_commands.choices(
+        role=_other_roles
+    )
     @discord.app_commands.describe(role="The role you want to assign yourself")
-    async def other(self, interaction: discord.Interaction, role: OtherRoles):
+    async def other(self, interaction: discord.Interaction, role: Choice[str]):
         """Choose one of the various interets roles"""
         if int(role.value) in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_roles(self.guild.get_role(int(role.value)))
