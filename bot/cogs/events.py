@@ -39,6 +39,10 @@ class Events(commands.Cog):
     def sos_role(self) -> discord.Role:
         return self.guild.get_role(self.client.server_info.NEED_HELP_ROLE)
 
+    @property
+    def voted_role(self) -> discord.Role:
+        return self.guild.get_role(self.client.server_info.VOTED_ROLE)
+
     async def cog_load(self):
         self.remove_sos_role.start()
         self.water.start()
@@ -133,6 +137,12 @@ class Events(commands.Cog):
 
         if len(message.embeds) > 0 and ":thumbsup:" in message.embeds[0].description:
             await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They have been awarded a bonus of 2🥔")
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        if before.roles != after.roles:
+            if self.voted_role in after.roles and self.voted_role not in before.roles:
+                await self.potato_channel.send(f"{after.mention} has bumped the server on https://discords.com/servers/kidsinthedark ! They have been awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):

@@ -45,15 +45,18 @@ class Boosters(commands.Cog):
         buffer.seek(0)
 
         return buffer
+    
+    def _intersect(self, list1: list, list2: list) -> bool:
+        return len(set(list1).intersection(set(list2))) > 0
 
-    booster = discord.app_commands.Group(name="booster", description="Commands exclusive to boosters", guild_ids=[GUILD_OBJECT.id])
+    premium = discord.app_commands.Group(name="premium", description="Commands exclusive to boosters/premium members", guild_ids=[GUILD_OBJECT.id])
 
-    @booster.command()
+    @premium.command()
     @discord.app_commands.describe(image="The image to put the logo over", image_url="The url of the image to put the logo over")
     async def logo(self, interaction: discord.Interaction, image: discord.Attachment = None, image_url: str = None):
         """Gives you the logo of the server"""
-        if not interaction.user.premium_since and not self.client.is_dev:
-            return await interaction.response.send_message("You must be a booster to use this command")
+        if not self._intersect([r.id for r in interaction.user.roles], self.client.server_info.PREMIUM_ROLES) and not self.client.is_dev:
+            return await interaction.response.send_message("You must be a booster or patreon to use this command. [Patreon ling](https://patreon.com/kitd)")
 
         if not image and not image_url:
             return await interaction.response.send_message("You must provide an image to put the logo over")
