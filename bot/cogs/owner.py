@@ -2,7 +2,10 @@ import discord
 
 from discord.ext import commands
 
-from bot.static.constants import GUILD_OBJECT
+from typing import Literal
+
+from bot.cogs.trials import Trials
+from bot.static.constants import GUILD_OBJECT, CONSTANTS, TRIALS
 from bot.utils.interactions import Modal
 
 class UpdateModal(Modal):
@@ -113,5 +116,38 @@ class Owner(commands.Cog):
         })
         await self.update_channel.send(content="<@&1004871752037453866>", embed=embed)
         await modal.interaction.response.send_message(":white_check_mark: Update published!", ephemeral=True)
+
+    @owner.command()
+    @discord.app_commands.describe(status="Wether to open or close trials")
+    async def trialstatus(self, interaction: discord.Interaction, status: Literal["open", "close"]):
+        """Opens or close the trials for staff positions"""
+
+        if not interaction.user.id == self.guild.owner_id:
+            return await interaction.response.send_message("You must be the server owner to use this command", ephemeral=True)
+
+        if TRIALS == ("open" == status):
+            return await interaction.response.send_message("Trials are already " + status + ("d" if status == "close" else ""), ephemeral=True)
+
+        data = CONSTANTS.find_one({"_id": "trials"})
+
+        await interaction.response.defer(ephemeral=True)
+
+        if not data:
+            CONSTANTS.insert_one({"_id": "trials", "active": status == "open"})
+        else:
+            CONSTANTS.update_one({"_id": "trials"}, {"$set": {"active": status == "open"}})
+
+        if status == "close":
+            await self.client.remove_cog("Trials") # Remove the trials command if the trials are closed
+            await self.client.tree.sync(guild=GUILD_OBJECT)
+
+            await interaction.followup.send(":white_check_mark: Trials closed", ephemeral=True)
+
+        else:
+            await self.client.add_cog(Trials(self.client))
+            await self.client.tree.sync(guild=GUILD_OBJECT)
+
+            await interaction.followup.send(":white_check_mark: Trials opened", ephemeral=True)
+
 
 Cog = Owner

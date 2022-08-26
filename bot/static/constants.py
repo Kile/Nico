@@ -23,6 +23,8 @@ DISBOARD = 302050872383242240
 
 ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]
 
+TRIALS = CONSTANTS.find_one({"_id": "trials"})["active"] if CONSTANTS.find_one({"_id": "trials"}) else False
+
 WELCOME_MESSAGE = \
 """ Welcome to Kids In The Dark **{}**!
 I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#711707649829240972>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about what is explained in those channels to ensure you have read them.

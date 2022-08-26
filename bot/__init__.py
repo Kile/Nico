@@ -4,7 +4,7 @@ import aiohttp
 from discord.ext import commands
 
 from . import cogs
-from .static.constants import TOKEN, ServerInfo, GUILD_OBJECT, ACTIVITY_EVENT
+from .static.constants import TOKEN, ServerInfo, GUILD_OBJECT, ACTIVITY_EVENT, TRIALS
 from .utils.functions import is_dev
 
 import logging
@@ -65,7 +65,10 @@ async def main():
 
     # Setup cogs.
     for cog in cogs.all_cogs:
-        if cog.__name__ == "event" and not ACTIVITY_EVENT:
+        if cog.__name__.lower() == "event" and not ACTIVITY_EVENT:
+            continue
+
+        if cog.__name__.lower() == "trials" and not TRIALS:
             continue
 
         await bot.add_cog(cog.Cog(bot))

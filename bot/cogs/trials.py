@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 
 from bot.utils.interactions import Modal
-from bot.static.constants import GUILD_OBJECT
+from bot.static.constants import GUILD_OBJECT, CONSTANTS
 
 class TrialsModal(Modal):
 
@@ -33,6 +33,11 @@ class Trials(commands.Cog):
     @discord.app_commands.guilds(GUILD_OBJECT)
     async def trials(self, interaction: discord.Interaction):
         """Apply for trials with this command"""
+
+        are_open: bool = CONSTANTS.find_one({"_id" : "trials"})["open"]
+
+        if not are_open:
+            return await interaction.response.send_message("Sorry, trials are not open at the moment.", ephemeral=True)
     
         modal = TrialsModal(interaction.user.id)
         await interaction.response.send_modal(modal)
