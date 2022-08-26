@@ -48,6 +48,3 @@ class Feedback(commands.Cog):
         await modal.interaction.response.send_message("Thank you for your feedback!", ephemeral=True)
 
 Cog = Feedback
-
-async def setup(client):
-    await client.add_cog(Feedback(client))
