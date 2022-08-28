@@ -95,7 +95,7 @@ class Join(commands.Cog):
         })
         message = await self.welcome_channel.send(content=member.mention, embed=embed)
 
-        view = View(timeout=60)
+        view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
 
         notification = await self.general_channel.send(f"**{member}** just joined! Please wait for them to be verified!", view=view)

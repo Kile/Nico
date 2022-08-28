@@ -80,7 +80,7 @@ class Event(commands.Cog):
             "fields": [
                 {
                     "name": f"{self.emotes[pos+1] if pos+1 in self.emotes else ''}{pos+1}{self.english[pos+1]} Place",
-                    "value": f"**{self.guild.get_member(member['_id'])}** with **{member['points']}** points",
+                    "value": f"**{self.guild.get_member(member['_id'])}** with **{round(member['points'], 2)}** points",
                     "inline": False
                 } for pos, member in enumerate(top_members)
             ]

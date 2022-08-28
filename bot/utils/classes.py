@@ -134,7 +134,7 @@ class Member:
     @property
     def last_message_at(self) -> Union[datetime, None]:
         """Returns the time of the last message the user sent"""
-        return self.last_messages[min(self.last_messages.keys())] if self.last_messages else None
+        return self.last_messages[max(self.last_messages.keys())] if self.last_messages else None
 
     def better_booster_active(self, booster: int) -> Union[bool, int]:
         """Returns whether the user has a better booster active"""
