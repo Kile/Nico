@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from random import sample
 
-from bot.utils.interactions import Modal
+from bot.utils.interactions import Modal, View, Button
 from bot.static.constants import WELCOME_MESSAGE, SERVER_QUESTIONS
 
 class JoinModal(Modal):
@@ -16,6 +16,41 @@ class JoinModal(Modal):
 
         for question in self.questions:
             self.add_item(discord.ui.TextInput(label=question["question"], required=True, style=discord.TextStyle.short))
+
+class WelcomeButton(Button):
+
+    def __init__(self, message: discord.Message, joining: discord.Member):
+        super().__init__(label="Welcome", emoji="<a:wave_animated:1013553177259430008>", style=discord.ButtonStyle.gray)
+        self.message = message
+        self.joining = joining
+        self.welcomed = []
+        self.emotes = ["<a:PikaWave:1013541266203623525>", "<a:RainbowHeart:1013541653056868383>", "<:ShibeHeart:1013541794199388210>", "<a:ablobwave:1013541120610930738>", "<:doggowave:1013541355978493962>", 
+        "<:obamaheart:1013541594395316354>", "<a:wave_animated:1013553177259430008>", "<a:hyperwave:1013553221618376805>", "<:foxwave:1013553116760784936>", "<:cir_wave:1013553330024361986>"]
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id in self.welcomed:
+            return await interaction.response.send_message("You have already welcomed the new user!", ephemeral=True)
+        if interaction.user.id == self.joining.id:
+            return await interaction.response.send_message("You can't welcome yourself!", ephemeral=True)
+
+        view = View(interaction.user.id)
+        for emote in self.emotes:
+            view.add_item(Button(emoji=emote, style=discord.ButtonStyle.gray, custom_id=emote))
+
+        await interaction.response.send_message("Please chose what emoji to welcome them with!", view=view, ephemeral=True)
+
+        await view.wait()
+
+        if view.timed_out:
+            return await view.disable(await interaction.original_response())
+
+        self.welcomed.append((interaction.user.id, view.value))
+
+        self.message.embeds[0].description = WELCOME_MESSAGE.format(self.joining.name) + "\n**༺♥️༻ㆍ You were welcomed by:**\n> " + "\n> ".join([f"<@{id}> {emote}" for id, emote in self.welcomed]) + "\n\nI hope you enjoy your stay!"
+
+        await self.message.edit(embed=self.message.embeds[0])
+        await view.interaction.response.send_message(":thumbsup: You have welcomed the new user!", ephemeral=True)
+        await view.disable(await interaction.original_response())
 
 class Join(commands.Cog):
 
@@ -58,7 +93,16 @@ class Join(commands.Cog):
                 "text": "Joined at " + member.joined_at.strftime("%H:%M:%S on %d/%m/%Y")
             }
         })
-        await self.welcome_channel.send(content=member.mention, embed=embed)
+        message = await self.welcome_channel.send(content=member.mention, embed=embed)
+
+        view = View(timeout=60)
+        view.add_item(WelcomeButton(message, member))
+
+        notification = await self.general_channel.send(f"**{member}** just joined! Please wait for them to be verified!", view=view)
+
+        await view.wait()
+
+        await view.disable(notification)
 
     @discord.app_commands.command()
     async def join(self, interaction: discord.Interaction):

@@ -35,8 +35,6 @@ Please also make sure to open your dms to Nico before running the `/join` comman
 
 Not sure what to do? Something isn't working? Need help?
 Feel free to dm a staff member at any point to ask for help.
-
-I hope you enjoy your stay!
 """
 
 DID_INFO = "This is an explanation about the purpose of the <@466378653216014359> bot, why some people talking appear as bots and what DID is. DID is short for Dissociative Identity Disorder, a disorder that is caused by trauma and splits your personality up in different \"alters\". Those alters are their Person on their own with their interests, personality, gender, etc. This is where <@466378653216014359> comes in. One alter always has control over the body and if the control changes, that is called a \"switch\". For every alter to feel more like themselves with just one discord account, they tell the bot which alter currently has the control and depending on that, the bot resends their messages with a different name and Profile Picture. So if you do not have DID, don't use <@466378653216014359>, and also this explains why sometimes \"bots talk\".\n[Learn more about DID](https://en.wikipedia.org/wiki/Dissociative_identity_disorder)"
