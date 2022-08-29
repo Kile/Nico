@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from bot.utils.interactions import Modal
 from bot.static.constants import GUILD_OBJECT
+from bot.utils.classes import PotatoMember as Member
 
 class FeedbackModal(Modal):
 
@@ -44,6 +45,7 @@ class Feedback(commands.Cog):
         embed = discord.Embed(title="Feedback", description=feedback, color=0x2f3136)
         embed.set_footer(text=f"Submitted by {interaction.user}")
         await self.channel.send(embed=embed)
+        Member(interaction.user).add_potatoes(5)
         await self.potato_channel.send(f"{interaction.user.mention} has left given feedback with `/feedback`. They have been awarded a bonus of 5🥔")
         await modal.interaction.response.send_message("Thank you for your feedback!", ephemeral=True)
 

@@ -4,7 +4,7 @@ from random import sample
 from datetime import datetime, timedelta
 from typing import Dict, Union, List
 
-from bot.static.constants import EVENT
+from bot.static.constants import EVENT, POTATO
 
 class Member:
     cache: Dict[int, "Member"] = {}
@@ -181,3 +181,61 @@ class Member:
             self.messages_a_day[list(self.messages_a_day)[-1:][0]] += 1
 
         EVENT.update_one({"_id": self.id}, {"$set": {"last_messages": self.last_messages, "messages_a_day": self.messages_a_day}})
+
+class PotatoMember:
+    cache: Dict[int, "Member"] = {}
+    potato: Union[discord.Message, None] = None
+
+    @classmethod 
+    def __get_cache(cls, user_id: int):
+        """Returns a cached object"""
+        return cls.cache[user_id] if user_id in cls.cache else None
+
+    def __new__(cls, user_id: int):
+        existing = cls.__get_cache(user_id)
+        if existing:
+            return existing
+        return super().__new__(cls)
+
+    def __init__(self, user_id: int):
+        if user_id in self.cache:
+            return 
+
+        data = POTATO.find_one({"_id": user_id})
+
+        if not data:
+            POTATO.insert_one({"_id": user_id, "potatoes": 0, "cooldowns": {}})
+            data = POTATO.find_one({"_id": user_id})
+
+        self.id = user_id
+        self.potatoes: int = data["potatoes"]
+        self.cooldowns: Dict[str, datetime] = data["cooldowns"]
+
+    @classmethod
+    def get_top_members(cls, amount: int = 10) -> List["Member"]:
+        """Returns the top members"""
+        return [PotatoMember(m["_id"]) for m in POTATO.find().sort("potatoes", -1).limit(amount)]
+
+    def add_potatoes(self, amount: int) -> None:
+        """Adds potatoes to the user"""
+        self.potatoes += amount
+        POTATO.update_one({"_id": self.id}, {"$inc": {"potatoes": amount}})
+
+    def remove_potatoes(self, amount: int) -> None:
+        """Removes potatoes from the user"""
+        self.potatoes -= amount
+        POTATO.update_one({"_id": self.id}, {"$inc": {"potatoes": -amount}})
+
+    def set_potatoes(self, amount: int) -> None:
+        """Sets the amount of potatoes the user has"""
+        self.potatoes = amount
+        POTATO.update_one({"_id": self.id}, {"$set": {"potatoes": amount}})
+
+    def add_cooldown(self, name: str) -> None:
+        """Adds a cooldown to the user"""
+        self.cooldowns[name] = datetime.now()
+        POTATO.update_one({"_id": self.id}, {"$set": {"cooldowns": self.cooldowns}})
+    
+    def has_valid_cooldown(self, name: str, **kwargs) -> bool:
+        """Returns whether the user has a cooldown"""
+        return name in self.cooldowns and datetime.now() - self.cooldowns[name] < timedelta(**kwargs)

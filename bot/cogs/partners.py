@@ -4,6 +4,7 @@ from discord.ext import commands
 from datetime import datetime
 
 from bot.static.constants import PARTNERS, GUILD_OBJECT
+from bot.utils.classes import PotatoMember as Member
 
 class Partners(commands.Cog):
 
@@ -53,6 +54,7 @@ class Partners(commands.Cog):
 
         PARTNERS.insert_one(data)
         await interaction.response.send_message(f"Your partner invite link is: {guild_invite.url}", ephemeral=True)
+        Member(interaction.user.id).add_potatoes(10)
         await self.potato_channel.send(f"{interaction.user.mention} has registered a new partnership with {invite.guild.name}. They have been awarded a bonus of 10🥔")
 
     @partner.command()

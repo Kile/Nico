@@ -159,7 +159,7 @@ class Roles(commands.Cog):
     async def help(self, interaction: discord.Interaction, role: Choice[str]):
         """Choose one of the various help roles"""
         if not self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
-            return await interaction.response.send_message("You need to be verified to get one of these roles! Use /verify to apply.", ephemeral=True)
+            return await interaction.response.send_message("You need to be verified to get one of these roles! Use `/apply` to apply.", ephemeral=True)
 
         if int(role.value) in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_roles(self.guild.get_role(int(role.value)))

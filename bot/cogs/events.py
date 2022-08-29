@@ -1,13 +1,15 @@
+from ctypes.wintypes import POINT
 import discord
 
 from discord.ext import commands, tasks
 
-from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT
-from bot.utils.classes import Member
+from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO
+from bot.utils.classes import Member, PotatoMember
 from bot.utils.interactions import View, Button
 
 from io import BytesIO
 from typing import Dict
+from asyncio import TimeoutError
 from random import randint, choices
 from datetime import datetime, timedelta
 
@@ -80,6 +82,33 @@ class Events(commands.Cog):
     async def before_remove_sos_role(self):
         await self.client.wait_until_ready()
 
+    async def handle_potato(self, message: discord.Message):
+        """Drops a potato in the chat and adds it to the inventory of the first member to send a potato emoji"""
+        await PotatoMember.potato.delete()
+        PotatoMember.potato = None
+        await message.delete()
+
+        member = PotatoMember(message.author.id)
+        poisonous = randint(1, 10_000) == 1 # 0.01 % chance of getting a poisonous potato
+
+        if poisonous:
+            lost = randint(5, 10)
+            member.remove_potatoes(lost)
+            embed = discord.Embed.from_dict({
+                "title": f":skull: POISONOUS POTATO :skull:",
+                "description": f"{message.author} tried to pick up a poisonous potato, poisoning {lost} potatoes in the process and now holds on to {member.potatoes} potato{'es' if member.potatoes != 1 else ''}",
+            })
+        else:
+            member.add_potatoes(1)
+            embed = discord.Embed.from_dict({
+                "title": ":potato: potato claimed :potato:",
+                "description": f"{message.author} has claimed a potato and now holds on to {member.potatoes} potato{'es' if member.potatoes != 1 else ''}",
+            })
+
+        embed.colour = 0x2f3136
+        embed.set_thumbnail(url=message.author.display_avatar.url if message.author.display_avatar else None)
+        await message.channel.send(embed=embed)
+
     def handle_score(self, message: discord.Message):
         """Adds a calculated amount of points to the author of the message based on their activity"""
         if message.author.id in self.client.server_info.EVENT_EXCLUDED_MEMBERS or message.channel.id in self.client.server_info.EVENT_EXCLUDED_CHANNELS:
@@ -134,10 +163,17 @@ class Events(commands.Cog):
 
                 await view.disable(msg)
 
+        if randint(1, 1000) == 1 and message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and not message.author.bot and not PotatoMember.potato: # 0.01% Chance of potato dropping
+            PotatoMember.potato = await message.channel.send(":potato:")
+
+        if PotatoMember.potato and message.content in [":potato:", "🥔", "\U0001f954"] and PotatoMember.potato.channel.id == message.channel.id and message.author.id != PotatoMember.potato.author.id:
+            await self.handle_potato(message)
+
         if message.author.id != DISBOARD:
             return
 
         if len(message.embeds) > 0 and ":thumbsup:" in message.embeds[0].description:
+            PotatoMember(message.author.id).add_potatoes(2)
             await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They have been awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
@@ -146,6 +182,7 @@ class Events(commands.Cog):
 
         if before.roles != after.roles:
             if self.voted_role in after.roles and self.voted_role not in before.roles:
+                PotatoMember(after.id).add_potatoes(2)
                 await self.potato_channel.send(f"{after.mention} has bumped the server on https://discords.com/servers/kidsinthedark ! They have been awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
@@ -155,5 +192,6 @@ class Events(commands.Cog):
         await self.client._change_presence()
         if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
             EVENT.delete_one({ "_id": member.id })
+        POTATO.delete_one({ "_id": member.id })
 
 Cog = Events

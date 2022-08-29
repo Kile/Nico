@@ -18,6 +18,7 @@ DB = CLUSTER["Will" if is_dev() else "Nico"]
 PARTNERS = DB["partners"]
 EVENT = DB["event"]
 CONSTANTS = DB["constants"]
+POTATO = DB["potato"]
 
 DISBOARD = 302050872383242240
 
