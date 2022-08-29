@@ -68,4 +68,18 @@ class Various(commands.Cog):
             CONSTANTS.insert_one({"_id": "chat_revive", "last_ping": datetime.now(), "last_ping_by": interaction.user.id})
         await interaction.response.send_message(f"{interaction.user.mention} calls upon the mighty {self.chat_revive.mention}!")
 
+    @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
+    async def close(self, interaction: discord.Interaction):
+        """Closes the current help thread"""
+
+        if not isinstance(interaction.channel, discord.Thread):
+            return await interaction.response.send_message("This command can only be used in a thread", ephemeral=True)
+
+        if not interaction.user.id == interaction.channel.owner_id or self.client.server_info.WILL_HELP_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message(f"You can only use this thread if you have the <@&{self.client.server_info.WILL_HELP_ROLE}> role or are the thread creator.", ephemeral=True)
+
+        await interaction.response.send_message(f"{interaction.user.mention} has closed this thread.")
+        await interaction.channel.edit(archived=True, locked=True if self.client.server_info.TRUSTED_ROLE else False)
+
 Cog = Various

@@ -43,7 +43,8 @@ class Roles(commands.Cog):
         Choice(name="programmer", value="733339593486893176"),
         Choice(name="discussion", value="727584396986810408"),
         Choice(name="qotd", value="1010663180596428821"),
-        Choice(name="chat revive", value="1011764789128744970")
+        Choice(name="chat revive", value="1011764789128744970"),
+        Choice(name="motivation pings", value="1013813519365451900"),
     ]
 
     def __init__(self, client: commands.Bot):

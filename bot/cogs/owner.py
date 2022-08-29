@@ -2,11 +2,11 @@ import discord
 
 from discord.ext import commands
 
-from typing import Literal
+from typing import Literal, Union, Tuple
 
 from bot.cogs.trials import Trials
 from bot.static.constants import GUILD_OBJECT, CONSTANTS, TRIALS
-from bot.utils.interactions import Modal
+from bot.utils.interactions import Modal, View, Button
 
 class UpdateModal(Modal):
 
@@ -17,13 +17,21 @@ class UpdateModal(Modal):
 
 class EmbedModal(Modal):
 
-    def __init__(self, user_id: int, current_embed: discord.Embed, current_image_embed: discord.Embed):
-        super().__init__(user_id, title="Feedback form")
+    def __init__(self, user_id: int, current_embed: discord.Embed):
+        super().__init__(user_id, title="Embed editing menu")
 
-        self.add_item(discord.ui.TextInput(label="Title", default=current_embed.title, required=True, max_length=256, style=discord.TextStyle.short))
-        self.add_item(discord.ui.TextInput(label="Description", default=current_embed.description, required=True, max_length=4000, style=discord.TextStyle.long))
-        self.add_item(discord.ui.TextInput(label="Image url", default=current_image_embed.image.url if current_image_embed.image else None, required=False, style=discord.TextStyle.short))
+        self.add_item(discord.ui.TextInput(label="Title", default=current_embed.title, required=False, max_length=256, style=discord.TextStyle.short))
+        self.add_item(discord.ui.TextInput(label="Description", default=current_embed.description, required=False, max_length=4000, style=discord.TextStyle.long))
+        self.add_item(discord.ui.TextInput(label="Image url", default=current_embed.image.url if current_embed.image else None, required=False, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Colour", default=str(current_embed.colour) if current_embed.colour else None, required=False, style=discord.TextStyle.short))
+        self.add_item(discord.ui.TextInput(label="Footer", default=current_embed.footer.text if current_embed.footer else None, required=False, style=discord.TextStyle.short))
+
+class ContentModal(Modal):
+    
+        def __init__(self, user_id: int, current_content: str):
+            super().__init__(user_id, title="Message editing menu")
+    
+            self.add_item(discord.ui.TextInput(label="Content", default=current_content, required=False, max_length=4000, style=discord.TextStyle.long))
 
 class Owner(commands.Cog):
 
@@ -51,47 +59,115 @@ class Owner(commands.Cog):
     def update_channel(self) -> discord.TextChannel:
         return self.guild.get_channel(self.client.server_info.UPDATE_CHANNEL)
 
+    async def _new_embed(self, old_embed: discord.Embed, interaction: discord.Interaction) -> Union[Tuple[discord.Embed, discord.Interaction], None]:
+
+        modal = EmbedModal(interaction.user.id, old_embed)
+        await interaction.response.send_modal(modal)
+
+        await modal.wait()
+
+        if modal.timed_out:
+            return
+
+        try:
+            colour = discord.Colour.from_str(modal.values[3])
+        except (ValueError, IndexError):
+            colour = None
+
+        embed = discord.Embed.from_dict({
+            "title": modal.values[0] or "", 
+            "description": modal.values[1] or "", 
+            "color": int(colour) if colour else 0,
+            "image": {"url": modal.values[2]},
+        })
+        if modal.values[4]:
+            embed.set_footer(text=modal.values[4])
+
+        return (embed, modal.interaction)
+
     async def edit(self, interaction: discord.Interaction, message: discord.Message):
         """Edits an embed in #information"""
         if not interaction.user.id == self.guild.owner_id:
             return await interaction.response.send_message("You do not have permission to edit this embed", ephemeral=True)
+        if not message.author.id == self.client.user.id:
+            return await interaction.response.send_message("You can only edit messages sent by the me", ephemeral=True)
 
-        if not message.embeds:
-            return await interaction.response.send_message("Message does not have an embed", ephemeral=True)
+        view = View(interaction.user.id, timeout=60)
+        view.add_item(Button(label="Message content", style=discord.ButtonStyle.blurple, custom_id="content"))
 
-        if len(message.embeds) < 2:
-            embed_1: discord.Embed = discord.Embed(title="", description="")
-            embed_1.set_image(url=message.embeds[0].image.url)
-            embed_2: discord.Embed = message.embeds[0]
-        else:
-            embed_1: discord.Embed = message.embeds[0]
-            embed_2: discord.Embed = message.embeds[1]
+        for pos, _ in enumerate(message.embeds):
+            view.add_item(Button(label=f"Embed {pos+1}", style=discord.ButtonStyle.blurple, custom_id=str(pos)))  
 
-        modal = EmbedModal(interaction.user.id, embed_2, embed_1)
+        view.add_item(Button(emoji="\U00002795", label="Add embed", style=discord.ButtonStyle.green, custom_id="add"))
+        view.add_item(Button(emoji="\U00002796", label="Remove embed", style=discord.ButtonStyle.red, custom_id="remove"))
 
-        await interaction.response.send_modal(modal)
-        await modal.wait()
+        await interaction.response.send_message("Please choose what to edit", view=view, ephemeral=True)
 
-        if modal.children[3]:
-            try:
-                embed_1.colour = discord.Colour.from_str(modal.children[3].value)
-                embed_2.colour = discord.Colour.from_str(modal.children[3].value)
-            except (ValueError, IndexError):
-                embed_1.colour = None # If the colour is not valid I don't want all the other changes to be lost, so I just ignore it
-                embed_2.colour = None
+        await view.wait()
 
-        embed_2.title = modal.children[0].value
-        embed_2.description = modal.children[1].value
-        embed_2.set_image(url=None)
+        if view.timed_out:
+            return await view.disable(await interaction.original_response())
 
-        embed_1.set_image(url=modal.children[2].value) # Setting the image to embed_1
+        if view.value == "content":
+            modal = ContentModal(interaction.user.id, message.content)
+            await view.interaction.response.send_modal(modal)
 
-        embed_1.title = "" # Clear title and description of image embed
-        embed_1.description = ""
+            await modal.wait()
 
-        await message.edit(embeds=[embed_1, embed_2])
+            if modal.timed_out:
+                return
 
-        await modal.interaction.response.send_message("Message updated", ephemeral=True)
+            await message.edit(content=modal.values[0])
+            await modal.interaction.response.send_message(":thumbsup: Content updated", ephemeral=True)
+
+        elif view.value.isdigit():
+            old_embed = message.embeds[int(view.value)]
+            new = await self._new_embed(old_embed, view.interaction)
+
+            if not new: return
+
+            new_embed, interaction = new
+
+            message.embeds[int(view.value)] = new_embed
+            await message.edit(embeds=message.embeds)
+            await interaction.response.send_message(":thumbsup: Embed updated", ephemeral=True)
+
+        elif view.value == "add":
+            new = await self._new_embed(discord.Embed(), view.interaction)
+
+            if not new: return
+
+            new_embed, interaction = new
+
+            message.embeds.append(new_embed)
+            await message.edit(embeds=message.embeds)
+            await interaction.response.send_message(":thumbsup: Embed added", ephemeral=True)
+
+        elif view.value == "remove":
+
+            await view.disable(await interaction.original_response(), respond=False)
+
+            if len(message.embeds) == 0:
+                return await interaction.response.send_message("There are no embeds to remove", ephemeral=True)
+
+            remove_view = View(interaction.user.id, timeout=60)
+
+            for pos, _ in enumerate(message.embeds):
+                remove_view.add_item(Button(label=f"Embed {pos+1}", style=discord.ButtonStyle.red, custom_id=str(pos)))
+
+            await view.interaction.response.send_message("Please choose what embed to remove", view=remove_view, ephemeral=True)
+
+            await remove_view.wait()
+
+            if remove_view.timed_out:
+                return await remove_view.disable(await view.interaction.original_response())
+
+            message.embeds.pop(int(remove_view.value))
+            await message.edit(embeds=message.embeds)
+            await remove_view.disable(await view.interaction.original_response(), respond=False)
+            return await remove_view.interaction.response.send_message(":thumbsup: Embed removed", ephemeral=True)
+
+        await view.disable(await view.interaction.original_response())
 
     owner = discord.app_commands.Group(name='owner', description="Owner commands", guild_ids=[GUILD_OBJECT.id])
 
