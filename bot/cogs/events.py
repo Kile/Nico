@@ -109,6 +109,8 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.guild != self.guild: return
+
         if ACTIVITY_EVENT and not message.author.bot:
             self.handle_score(message)
 
@@ -140,12 +142,16 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
+        if after.guild != self.guild: return
+
         if before.roles != after.roles:
             if self.voted_role in after.roles and self.voted_role not in before.roles:
                 await self.potato_channel.send(f"{after.mention} has bumped the server on https://discords.com/servers/kidsinthedark ! They have been awarded a bonus of 2🥔")
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        if member.guild != self.guild: return
+
         await self.client._change_presence()
         if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
             EVENT.delete_one({ "_id": member.id })
