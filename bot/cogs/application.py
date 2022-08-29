@@ -68,7 +68,7 @@ class Application(commands.Cog):
                     await view.wait()
                     
                     view.children[0].disabled = True
-                    await modal.interaction.edit_original_message(view=view)
+                    await modal.interaction.edit_original_response(view=view)
 
                     if view.timed_out:
                         return
