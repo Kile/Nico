@@ -28,12 +28,12 @@ class WelcomeButton(Button):
         "<:obamaheart:1013541594395316354>", "<a:wave_animated:1013553177259430008>", "<a:hyperwave:1013553221618376805>", "<:foxwave:1013553116760784936>", "<:cir_wave:1013553330024361986>"]
 
     async def callback(self, interaction: discord.Interaction):
-        if interaction.user.id in self.welcomed:
+        if interaction.user.id in [m for m, _ in self.welcomed]:
             return await interaction.response.send_message("You have already welcomed the new user!", ephemeral=True)
         if interaction.user.id == self.joining.id:
             return await interaction.response.send_message("You can't welcome yourself!", ephemeral=True)
 
-        view = View(interaction.user.id)
+        view = View(interaction.user.id, timeout=30)
         for emote in self.emotes:
             view.add_item(Button(emoji=emote, style=discord.ButtonStyle.gray, custom_id=emote))
 
@@ -41,7 +41,7 @@ class WelcomeButton(Button):
 
         await view.wait()
 
-        if view.timed_out:
+        if view.timed_out or not view.interaction:
             return await view.disable(await interaction.original_response())
 
         self.welcomed.append((interaction.user.id, view.value))
@@ -98,7 +98,7 @@ class Join(commands.Cog):
         view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
 
-        notification = await self.general_channel.send(f"**{member}** just joined! Please wait for them to be verified!", view=view)
+        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member}** just joined! They cannot see this channel yet, instead press the welcome button to welcome them!", view=view)
 
         await view.wait()
 
