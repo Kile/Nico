@@ -87,7 +87,7 @@ class Join(commands.Cog):
 
         embed = discord.Embed.from_dict({
             "title": "Welcome to the server!",
-            "description": WELCOME_MESSAGE.format(member.display_name),
+            "description": WELCOME_MESSAGE.format(member.display_name) + "\n\nI hope you enjoy your stay!",
             "color": 0x2f3136,
             "footer": {
                 "text": "Joined at " + member.joined_at.strftime("%H:%M:%S on %d/%m/%Y")
