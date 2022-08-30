@@ -45,7 +45,8 @@ class Events(commands.Cog):
     def voted_role(self) -> discord.Role:
         return self.guild.get_role(self.client.server_info.VOTED_ROLE)
 
-    async def cog_load(self):
+    @commands.Cog.listener()
+    async def on_ready(self):
         self.remove_sos_role.start()
         self.water.start()
         print("Loaded events cog")
