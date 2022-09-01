@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from bot.__init__ import Bot
 from bot.utils.interactions import Modal
 from bot.static.constants import GUILD_OBJECT
 
@@ -15,7 +16,7 @@ class TrialsModal(Modal):
 
 class Trials(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
         
     @property

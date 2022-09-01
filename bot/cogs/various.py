@@ -2,13 +2,21 @@ import discord
 
 from discord.ext import commands
 
-from datetime import datetime, timedelta, timezone
+import inspect, os
+from typing import Optional
+from datetime import datetime, timedelta
 
+from bot.__init__ import Bot
 from bot.static.constants import GUILD_OBJECT, DID_INFO, CONSTANTS
+
+class Url(discord.ui.View):
+    def __init__(self, url: str, label: str = 'Open', emoji: Optional[str] = None):
+        super().__init__()
+        self.add_item(discord.ui.Button(label=label, emoji=emoji, url=url))
 
 class Various(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
     async def cog_load(self):
@@ -81,5 +89,72 @@ class Various(commands.Cog):
 
         await interaction.response.send_message(f"{interaction.user.mention} has closed this thread.")
         await interaction.channel.edit(archived=True, locked=True if self.client.server_info.TRUSTED_ROLE else False)
+
+    @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
+    async def source(self, interaction: discord.Interaction, command: str = None):
+        """
+        Links to the bots code, or a specific command's
+        """
+        # noinspection PyGlobalUndefined
+        global obj
+        source_url = "https://github.com/Kile/Nico"
+        branch = "master"
+        license_url = f"{source_url}/blob/master/LICENSE"
+        mpl_advice = (
+            f"**This code is licensed under [MPL]({license_url})**"
+            f"\nRemember that you must use the "
+            f"\nsame license! [[read more]]({license_url}#L160-L168)"
+        )
+        obj = None
+
+        if command is None:
+            embed = discord.Embed(title=f"Here's my source code.", description=mpl_advice)
+            embed.set_image(url="https://cdn.discordapp.com/attachments/879251951714467840/896445332509040650/unknown.png")
+            return await interaction.response.send_message(
+                embed=embed,
+                view=Url(source_url, label="Open on GitHub", emoji="<:github:744345792172654643>")
+            )
+
+        if command == "help":
+            return
+            src = type(self.bot.help_command)
+            module = src.__module__
+            filename = inspect.getsourcefile(src)
+            obj = "help"
+        else:
+            obj = self.client.tree.get_command(command.replace(".", " "), guild=interaction.guild if command != "join" else None)
+            if obj is None:
+                embed = discord.Embed(title=f"Couldn't find command.", description=mpl_advice)
+                embed.set_image(
+                    url="https://cdn.discordapp.com/attachments/879251951714467840/896445332509040650/unknown.png"
+                )
+                return await interaction.response.send_message(
+                    embed=embed,
+                    view=Url(source_url, label="Open on GitHub", emoji="<:github:744345792172654643>")
+                )
+
+            src = obj.callback.__code__
+            module = obj.callback.__module__
+            filename = src.co_filename
+
+        lines, firstlineno = inspect.getsourcelines(src)
+        if not module.startswith("discord"):
+            # not a built-in command
+            location = os.path.relpath(filename).replace("\\", "/")
+        else:
+            location = module.replace(".", "/") + ".py"
+            source_url = "https://github.com/Rapptz/discord.py"
+            branch = "master"
+
+        final_url = f"{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}"
+        embed = discord.Embed(title=f"Here's `{obj.name}`", description=mpl_advice)
+        embed.set_image(url="https://cdn.discordapp.com/attachments/879251951714467840/896445332509040650/unknown.png")
+        embed.set_footer(text=f"{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}")
+
+        await interaction.response.send_message(
+            embed=embed,
+            view=Url(final_url, label=f"Here's {obj.name}", emoji="<:github:744345792172654643>")
+        )
 
 Cog = Various

@@ -1,10 +1,11 @@
 import discord
 
 from random import sample
+from enum import Enum, auto
 from datetime import datetime, timedelta
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Tuple
 
-from bot.static.constants import EVENT, POTATO
+from bot.static.constants import EVENT, POTATO, CONSTANTS
 
 class Member:
     cache: Dict[int, "Member"] = {}
@@ -182,6 +183,15 @@ class Member:
 
         EVENT.update_one({"_id": self.id}, {"$set": {"last_messages": self.last_messages, "messages_a_day": self.messages_a_day}})
 
+class PerkType(Enum):
+    CUSTOM_ROLE = {"name": "Custom Role", "description": "Gives you a custom role you can design yourself", "item": "custom_role"}
+    CUSTOME_EMOTE = {"name": "Custom Emote", "description": "Allowes you to design and add a custom emote", "item": "emote"}
+    CUSTOM_STICKER = {"name": "Custom Sticker", "description": "Allows you to design and add a custom sticker", "item": "sticker"}
+    ROLE = {"name": "Role", "description": "Gives you a role", "item": "role"}
+
+    OTHER = {"name": "Other"}
+    NOT_SPECIFIED = auto()
+
 class PotatoMember:
     cache: Dict[int, "Member"] = {}
     potato: Union[discord.Message, None] = None
@@ -204,12 +214,13 @@ class PotatoMember:
         data = POTATO.find_one({"_id": user_id})
 
         if not data:
-            POTATO.insert_one({"_id": user_id, "potatoes": 0, "cooldowns": {}})
+            POTATO.insert_one({"_id": user_id, "potatoes": 0, "cooldowns": {}, "items": {}})
             data = POTATO.find_one({"_id": user_id})
 
         self.id = user_id
         self.potatoes: int = data["potatoes"]
         self.cooldowns: Dict[str, datetime] = data["cooldowns"]
+        self.items: Dict[str, int] = data["items"] if "items" in data else {}
 
     @classmethod
     def get_top_members(cls, amount: int = 10) -> List["Member"]:
@@ -239,3 +250,238 @@ class PotatoMember:
     def has_valid_cooldown(self, name: str, **kwargs) -> bool:
         """Returns whether the user has a cooldown"""
         return name in self.cooldowns and datetime.now() - self.cooldowns[name] < timedelta(**kwargs)
+
+    def add_item(self, type: PerkType, amount: int = 1) -> None:
+        """Adds an item to the user"""
+        if type == PerkType.OTHER or type == PerkType.NOT_SPECIFIED:
+            raise ValueError("Cannot add an item of type OTHER or NOT_SPECIFIED")
+
+        self.items[type.value['item']] = amount
+        POTATO.update_one({"_id": self.id}, {"$set": {"items": self.items}})
+
+    def has_item(self, type: PerkType, amount: int = 1) -> bool:
+        """Returns whether the user has an item the specified amount of times"""
+        if type == PerkType.OTHER or type == PerkType.NOT_SPECIFIED:
+            raise ValueError("Cannot check an item of type OTHER or NOT_SPECIFIED")
+        
+        return type.value['item'] in self.items and self.items[type.value['item']] >= amount
+
+class AuctionItem:
+    """Represents an item in an auction"""
+    def __init__(self, auction = None, index: int = None, **kwargs):
+        self.auction = auction
+        self._index = index
+        
+        self.id = kwargs.get("id")
+        # Setting self.id to the first id to the lowest possible number not yet in auction.items
+        if self.id is None and auction:
+            self.id = min([i["id"] for i in self.auction.raw_items] + [index]) if index else min([i["id"] for i in self.auction.raw_items] + [len(self.auction.raw_items)])
+
+        self.name: str = kwargs.get("name")
+        self.description: str = kwargs.get("description")
+        self.image: str = kwargs.get("image")
+        self.type: PerkType = getattr(PerkType, kwargs.get("type") or "NOT_SPECIFIED") if isinstance(kwargs.get("type"), str) else kwargs.get("type")
+        self.colour: int = kwargs.get("colour") or 0x2f3136
+        self.amount: int = kwargs.get("amount") or 1
+        self.bidders: Dict[int, Dict[str, int]] = kwargs.get("bidders", {})
+        self.listing_price: bool = kwargs.get("listing_price") or 1
+        self.current_price: bool = kwargs.get("current_price") or self.listing_price
+        self.featured: bool = kwargs.get("featured") or False
+        self.listed_by: int = kwargs.get("listed_by")
+        self.ending_at: datetime = kwargs.get("ending_at") or datetime.now() + timedelta(minutes=1)
+
+        if self.type == PerkType.ROLE:
+            self.role_id: int = kwargs.get("role_id")
+
+    @classmethod
+    def raw_kwargs(cls) -> dict:
+        """Returns a dictionary of editable kwargs with default values"""
+        return {
+            "name": None,
+            "description": None,
+            "image": None,
+            "type": None,
+            "amount": 1,
+            "listing_price": None,
+            "featured": False,
+            "ending_at": None,
+            "role_id": None,
+            "colour": None,
+            "amount": 1
+        }
+
+    @property
+    def includes_discord_perks(self) -> bool:
+        """Returns whether the item includes discord perks"""
+        return self.type in (PerkType.CUSTOM_ROLE, PerkType.CUSTOME_EMOTE, PerkType.CUSTOM_STICKER, PerkType.ROLE)
+
+    @property
+    def should_end(self) -> bool:
+        """Returns whether the item should end"""
+        return self.ending_at < datetime.now()
+
+    def to_embed(self, guild: discord.Guild) -> discord.Embed:
+        """Returns the item as an embed"""
+        embed = discord.Embed(title=self.name or "Not named", description=(self.description or "No description"), color=self.colour)
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/843442230547054605/1014678566732038235/3460-verified.png" if self.featured else None)
+        embed.set_image(url=self.image)
+        embed.add_field(name="Current Price", value=f"{self.current_price} potatoes")
+        embed.add_field(name="Highest bidder", value=guild.get_member(self._find_first_valid_bidder()) if self._find_first_valid_bidder() else "None yet")
+        embed.add_field(name="Listing Price", value=f"{self.listing_price} potatoes")
+        embed.add_field(name="Ending", value="<t:" + str(int(self.ending_at.timestamp())) + ":R>")
+        embed.add_field(name="Is discord perk", value=(f"Yes:\n{self.type.value['item']}" + (f"\n<@&{self.role_id}>" if self.type.ROLE else "")) if self.includes_discord_perks else "No")
+        embed.add_field(name="Bidders", value=f"{len(self.bidders)}")
+        embed.add_field(name="Amount", value=f"{self.amount}")
+        embed.add_field(name="Listed by", value=guild.get_member(self.listed_by).mention if guild.get_member(self.listed_by) else "Unknown")
+        embed.add_field(name="Item ID", value=f"{self.id}" if not self.id is None else "Not yet listed")
+        return embed
+
+    def to_dict(self) -> dict:
+        """Returns the item as a dictionary"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "image": self.image,
+            "type": self.type.name,
+            "colour": self.colour,
+            "amount": self.amount,
+            "bidders": self.bidders,
+            "listing_price": self.listing_price,
+            "current_price": self.current_price,
+            "featured": self.featured,
+            "listed_by": self.listed_by,
+            "ending_at": self.ending_at,
+            "role_id": self.role_id if hasattr(self, "role_id") else None
+        }
+
+    def _real_bids(self) -> List[Tuple[int, int]]:
+        """Returns a list with the real bids"""
+        result = []
+
+        def sort(item: dict) -> int:
+            if "max_bid" in item and not item["max_bid"] is None:
+                return item["max_bid"]
+
+            else:
+                return item["bid"]
+
+        sorted_bidders = sorted(self.bidders, key=lambda x: sort(self.bidders[x]), reverse=True)
+
+        maximum_bids = [self.bidders[v]["max_bid"] if "max_bid" in self.bidders[v] and self.bidders[v]["max_bid"] else self.bidders[v]["bid"] for v in sorted_bidders]
+
+        for position, bidder in enumerate(sorted_bidders):
+            if position == len(sorted_bidders) - 1:
+                result.append((int(bidder), sort(self.bidders[bidder])))
+            else:
+                second_highest = max(filter(lambda x: x not in maximum_bids[:position+1], maximum_bids)) + 1
+                result.append((int(bidder), second_highest))
+
+        return result
+
+    def _find_first_valid_bidder(self) -> Union[int, None]:
+        """Goes through all bids in descending order until finding a bidder that actually has the potatoes they bid"""
+        # First we put all the bidders in a list and the lowest amount they could pay if they were on top to bid more than the person with less
+
+        for bidder, amount in self._real_bids():
+            if PotatoMember(bidder).potatoes >= amount:
+                return bidder
+        return None
+
+    def _find_first_valid_bid(self) -> Union[int, None]:
+        """Looks through the bids and returns the first valid bid"""
+        valid_bidder = self._find_first_valid_bidder()
+        real_bids = self._real_bids()
+
+        for pos, (bidder, amount) in enumerate(real_bids):
+            if bidder == valid_bidder:
+                if len(real_bids) == pos + 1:
+                    return self.bidders[str(bidder)]["bid"]
+                else:
+                    next_amount = real_bids[pos + 1][1]
+                    data = self.bidders[str(bidder)]
+
+                    if data["max_id"] and next_amount > data["bid"]: # In this case a max bid from the one below was higher than the bid here, so the lowest max bid is taken
+                        return amount
+                    elif next_amount < data["bid"]: # The first bid is enough to outbid the second
+                        return data["bid"]
+                    else:
+                        raise ValueError("User has not bid more than the one below")
+        return None
+
+    def sell(self, guild: discord.Guild) -> Tuple[discord.Member, int]:
+        """Sells the item to the highest bidder at that time and returns who it was and the winning bid"""
+        highest_bidder = self._find_first_valid_bidder()
+        winning_bid = self._find_first_valid_bid()
+        highest_bidder = guild.get_member(highest_bidder)
+
+        # Removing the price the bidder paid for it
+        potato_bidder = PotatoMember(highest_bidder.id)
+        potato_bidder.remove_potatoes(winning_bid)
+
+        # Adding that money to the seller
+        potato_seller = PotatoMember(self.listed_by)
+        potato_seller.add_potatoes(winning_bid)
+
+        if self.includes_discord_perks:
+            if self.type == PerkType.ROLE:
+                role = guild.get_role(self.role_id)
+                seller = guild.get_member(self.listed_by)
+                # Swaps out the role
+                seller.remove_roles(role)
+                highest_bidder.add_roles(role)
+
+            potato_bidder.add_item(self.type, amount=self.amount)
+
+        # Remove the item from the auction
+        self.auction.remove_item(self)
+
+        return highest_bidder, winning_bid
+
+    def bid(self, bidder: discord.Member, bid: int, maximum_bid: int = None) -> bool:
+        """Places a bid on the item and returns wether or not the bidder now has the highest bid"""
+
+        self.bidders[str(bidder.id)] = {"max_bid": maximum_bid, "bid": bid} # Even though the bid might be lower than the maximum bid, we still want to keep the data
+        # If there is a higher maximum bid from someone else than the supplied bid, the highest maximum bid wins
+        real_bids = self._real_bids()
+        highest_bidder, current_highest_bid = real_bids[0]
+
+        if highest_bidder == bidder.id and (len(real_bids) > 1 and bid > real_bids[1][1]) or (len(real_bids) == 1 and bid > self.listing_price):
+            self.current_price = bid # If the standart bid succeeds we want the new price to be the bid
+        else:
+            self.current_price = current_highest_bid
+
+        return highest_bidder == bidder.id
+
+    def sync(self) -> None:
+        """Syncs the item with the database"""
+        self.auction.items[self._index] = self
+        CONSTANTS.update_one({"_id": "auction"}, {"$set": {"items": [i.to_dict() for i in self.auction.items]}})
+
+class Auction:
+
+    def __init__(self) -> None:
+        
+        data = CONSTANTS.find_one({"_id": "auction"})
+
+        self.raw_items = data["items"] if "items" in data else [] # Set the raw data first so it can be accessed from inside the AuctionItem constructor
+        self.items = [AuctionItem(auction=self,index=p, **i) for p, i in enumerate(self.raw_items)]
+
+    @property
+    def sorted_items(self) -> List[AuctionItem]:
+        """Returns the items sorted by current price and by wether they are featured or not"""
+        return sorted(self.items, key=lambda i: (i.current_price, i.featured), reverse=True)
+
+    def item_where_id(self, id: int) -> AuctionItem:
+        """Returns the item with the supplied id"""
+        return next(filter(lambda i: i.id == id, self.items), None)
+
+    def remove_item(self, item: AuctionItem) -> None:
+        """Removes an item from the auction"""
+        self.items.pop(item._index)
+        CONSTANTS.update_one({"_id": "auction"}, {"$set": {"items": [i.to_dict() for i in self.items]}})
+
+    def add_item(self, item: AuctionItem) -> None:
+        """Adds an item to the auction"""
+        self.items.append(item)
+        CONSTANTS.update_one({"_id": "auction"}, {"$set": {"items": [i.to_dict() for i in self.items]}})

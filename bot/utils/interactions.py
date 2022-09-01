@@ -86,3 +86,20 @@ class Button(discord.ui.Button):
         self.view.value = self.custom_id
         self.view.interaction = interaction
         self.view.stop()
+
+class Select(discord.ui.Select):
+    """Creates a select menu to view the command groups"""
+    def __init__(self, options, **kwargs):
+        super().__init__( 
+            min_values=1, 
+            max_values=1, 
+            options=options,
+            **kwargs
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        self.view.value = interaction.data["values"][0]
+        for opt in self.options:
+            if opt.value == str(self.view.value):
+                opt.default = True
+        self.view.stop()

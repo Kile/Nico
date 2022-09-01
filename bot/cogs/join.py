@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from random import sample
 
+from bot.__init__ import Bot
 from bot.utils.interactions import Modal, View, Button
 from bot.static.constants import WELCOME_MESSAGE, SERVER_QUESTIONS
 
@@ -46,7 +47,7 @@ class WelcomeButton(Button):
 
         self.welcomed.append((interaction.user.id, view.value))
 
-        self.message.embeds[0].description = WELCOME_MESSAGE.format(self.joining.name) + "\n**༺♥️༻ㆍ You were welcomed by:**\n> " + "\n> ".join([f"**{self.message.guild.get_member(id)}** {emote}" for id, emote in self.welcomed]) + "\n\nI hope you enjoy your stay!"
+        self.message.embeds[0].description = WELCOME_MESSAGE.format(self.joining.name) + "\n**༺♥️༻ㆍ You were welcomed by:**\n> " + "\n> ".join([f"{self.message.guild.get_member(id).name}*#{self.message.guild.get_member(id).discriminator}* {emote}" for id, emote in self.welcomed]) + "\n\nI hope you enjoy your stay!"
 
         await self.message.edit(embed=self.message.embeds[0])
         await view.interaction.response.send_message(":thumbsup: You have welcomed the new user!", ephemeral=True)
@@ -54,7 +55,7 @@ class WelcomeButton(Button):
 
 class Join(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
     async def cog_load(self):

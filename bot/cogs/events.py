@@ -3,19 +3,19 @@ import discord
 
 from discord.ext import commands, tasks
 
+from bot.__init__ import Bot
 from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO
 from bot.utils.classes import Member, PotatoMember
 from bot.utils.interactions import View, Button
 
 from io import BytesIO
 from typing import Dict
-from asyncio import TimeoutError
 from random import randint, choices
 from datetime import datetime, timedelta
 
 class Events(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
         self.last_messages_cache: Dict[int, datetime] = {}

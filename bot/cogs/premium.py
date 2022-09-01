@@ -6,11 +6,12 @@ from typing import Union, List
 from PIL import Image
 from aiohttp.client_exceptions import InvalidURL, ClientResponseError
 
+from bot.__init__ import Bot
 from bot.static.constants import GUILD_OBJECT
 
 class Boosters(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
         self.logo_image_url = "https://cdn.discordapp.com/attachments/1004512555538067476/1010537495148118056/KITD_Logo.gif"
 

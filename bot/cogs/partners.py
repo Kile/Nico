@@ -3,12 +3,13 @@ import discord
 from discord.ext import commands
 from datetime import datetime
 
+from bot.__init__ import Bot
 from bot.static.constants import PARTNERS, GUILD_OBJECT
 from bot.utils.classes import PotatoMember as Member
 
 class Partners(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
     @property

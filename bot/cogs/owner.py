@@ -4,6 +4,7 @@ from discord.ext import commands
 
 from typing import Literal, Union, Tuple
 
+from bot.__init__ import Bot
 from bot.cogs.trials import Trials
 from bot.static.constants import GUILD_OBJECT, CONSTANTS, TRIALS
 from bot.utils.interactions import Modal, View, Button
@@ -35,7 +36,7 @@ class ContentModal(Modal):
 
 class Owner(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
         self.update_banner_url = "https://cdn.discordapp.com/attachments/1004512555538067476/1008487606893416538/20220814_234634_0000.png"
 

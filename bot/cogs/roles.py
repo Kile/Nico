@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from typing import Optional, Any
 
+from bot.__init__ import Bot
 from bot.utils.interactions import View, Button
 from bot.static.constants import Sexualities, Romantic, GUILD_OBJECT
 
@@ -47,7 +48,7 @@ class Roles(commands.Cog):
         Choice(name="motivation pings", value="1013813519365451900"),
     ]
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
         
     @property

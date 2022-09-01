@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from discord.ext import commands
 
+from bot.__init__ import Bot
 from bot.utils.functions import is_dev
 from bot.static.constants import ServerInfo, GUILD_OBJECT
 
@@ -143,7 +144,7 @@ class UntrustView(discord.ui.View):
 
 class Untrust(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
     @property

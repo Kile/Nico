@@ -6,13 +6,14 @@ from datetime import timedelta, datetime
 from random import randint
 from typing import Literal
 
+from bot.__init__ import Bot
 from bot.static.constants import GUILD_OBJECT, EVENT_EXPLANATION, CONSTANTS
 from bot.utils.classes import Member
 from bot.utils.interactions import View, Button
 
 class Event(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
         self.prices = {
             2: 5000,

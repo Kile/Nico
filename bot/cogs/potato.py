@@ -1,20 +1,312 @@
 import discord
 
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from random import randint
-from typing import Literal, List
-from datetime import timedelta
+from typing import Literal, List, Tuple
+from datetime import timedelta, datetime
 
-from bot.utils.classes import PotatoMember as Member
+from bot.__init__ import Bot
+from bot.utils.classes import PotatoMember as Member, Auction, AuctionItem, PerkType
 from bot.static.constants import GUILD_OBJECT
+from bot.utils.paginator import Paginator
+from bot.utils.interactions import Modal, View, Select, Button
+from bot.utils.timeconverter import TimeConverter
+
+class CreateAuctionView(View):
+
+    def __init__(self, user_id: int, auctionable_roles: List[int], original_interaction: discord.Interaction):
+        super().__init__(user_id)
+        self.kwargs = AuctionItem.raw_kwargs()
+        self.kwargs["listed_by"] = user_id
+        self._ending_in = None
+        self._raw_ending_in = None
+        self.original_interaction = original_interaction
+        self.auctionable_roles = auctionable_roles
+        self.guild = self.original_interaction.guild
+
+    async def _modal_edit(
+        self,
+        interaction: discord.Interaction, 
+        title: str, 
+        label: str, 
+        placeholder: str, 
+        max_length: int, 
+        style: discord.TextStyle = discord.TextStyle.short,
+        default: str = None
+    ) -> Tuple[str, discord.Interaction]:
+
+        modal = Modal(interaction.user.id, title=title)
+        modal.add_item(discord.ui.TextInput(label=label, placeholder=placeholder, required=True, max_length=max_length, style=style, default=default))
+
+        await interaction.response.send_modal(modal)
+
+        await modal.wait()
+
+        if modal.timed_out:
+            return await self.disable(await self.original_interaction.original_response())
+
+        return (modal.values[0], modal.interaction)
+
+    @discord.ui.button(label="Name", style=discord.ButtonStyle.blurple)
+    async def title(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose a name", "Name", "A real potato", 60, default=self.kwargs["name"])
+        if not resp: return
+
+        value, interaction = resp
+
+        self.kwargs["name"] = value
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Description", style=discord.ButtonStyle.blurple)
+    async def description(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose a description", "Description", "Some cool description", 2000, style=discord.TextStyle.long, default=self.kwargs["description"])
+        if not resp: return
+
+        value, interaction = resp
+
+        self.kwargs["description"] = value
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Listing Price", style=discord.ButtonStyle.blurple)
+    async def price(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose a price in potatoes", "Price", "100", 10, default=str(self.kwargs["listing_price"]) if self.kwargs["listing_price"] else None)
+        if not resp: return
+
+        value, interaction = resp
+
+        if not value.isdigit():
+            return await interaction.response.send_message("Price must be a number", ephemeral=True)
+
+        if int(value) < 1:
+            return await interaction.response.send_message("Price must be at least 1", ephemeral=True)
+
+        self.kwargs["listing_price"] = int(value)
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Image", style=discord.ButtonStyle.blurple)
+    async def image(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose an image url", "Image url", "https://images.com/image.png", 500, default=self.kwargs["image"])
+        if not resp: return
+
+        value, interaction = resp
+
+        self.kwargs["image"] = value
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Ending in", style=discord.ButtonStyle.blurple)
+    async def ending_at(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose an ending time", "Ending in", "10h", 10, default=self._raw_ending_in)
+        if not resp: return
+
+        value, interaction = resp
+
+        try:
+            self._ending_in = await TimeConverter().convert(value)
+        except commands.BadArgument as e:
+            return await interaction.response.send_message(e)
+
+        self._raw_ending_in = value
+        self.kwargs["ending_at"] = datetime.now() + self._ending_in
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Colour", style=discord.ButtonStyle.blurple)
+    async def colour(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose a colour", "Colour", "#ffffff", 8, default=str(discord.Colour(self.kwargs["colour"])) if self.kwargs["colour"] else None)
+        if not resp: return
+
+        value, interaction = resp
+
+        try:
+            self.kwargs["colour"] = int(discord.Colour.from_str(value))
+        except ValueError:
+            return await interaction.response.send_message("Invalid colour", ephemeral=True)
+
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Amount", style=discord.ButtonStyle.blurple)
+    async def amount(self, interaction: discord.Interaction, _: discord.Button) -> None:
+        resp = await self._modal_edit(interaction, "Choose an amount", "Amount", "1", 5, default=str(self.kwargs["amount"]))
+        if not resp: return
+
+        value, interaction = resp
+
+        if not value.isdigit():
+            return await interaction.response.send_message("Amount must be a number", ephemeral=True)
+
+        if int(value) < 1:
+            return await interaction.response.send_message("Amount must be greater than 0", ephemeral=True)
+
+        if self.kwargs["type"]:
+            if self.kwargs["type"] in (PerkType.CUSTOM_ROLE, PerkType.CUSTOM_STICKER, PerkType.CUSTOME_EMOTE):
+                if not Member(interaction.user.id).has_item(self.kwargs["type"], int(value)):
+                    return await interaction.response.send_message("You don't have that amount of items", ephemeral=True)
+            elif self.kwargs["type"] == PerkType.ROLE and int(value) > 1:
+                return await interaction.response.send_message("You can't sell more than one role", ephemeral=True)
+
+        self.kwargs["amount"] = int(value)
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Type", style=discord.ButtonStyle.blurple)
+    async def type(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        view = View(self.user_id)
+        view.add_item(Select([discord.SelectOption(label=p.value['name'], value=p.name) for p in PerkType if not p in [PerkType.NOT_SPECIFIED]]))
+
+        await interaction.response.send_message("Please chose the type of what you would like to auction", view=view, ephemeral=True)
+
+        await view.wait()
+
+        if view.timed_out:
+            return await self.disable(await self.original_interaction.original_response())
+
+        if not getattr(PerkType, view.value) in [PerkType.OTHER, PerkType.NOT_SPECIFIED]:
+            if not Member(interaction.user.id).has_item(getattr(PerkType, view.value), self.kwargs["amount"]) and not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message("You don't have the required item(s) to auction this", ephemeral=True)
+
+            else:
+                self.kwargs["type"] = getattr(PerkType, view.value)
+
+                if self.kwargs["type"] == PerkType.ROLE:
+                    roles = [discord.SelectOption(label=role.name, value=role.id) for role in interaction.guild.roles if role.id in self.auctionable_roles and (interaction.user.guild_permissions.administrator or role.id in interaction.user.roles)]
+
+                    if not roles:
+                        return await interaction.response.send_message("You don't have any roles to auction", ephemeral=True)
+
+                    # Create a select to select the role to auction off
+                    role_view = View(self.user_id)
+                    role_view.add_item(Select(roles))
+
+                    await view.interaction.response.send_message("Please chose the role you would like to auction", view=role_view, ephemeral=True)
+
+                    await role_view.wait()
+
+                    if role_view.timed_out:
+                        return await self.disable(await self.original_interaction.original_response())
+
+                    self.kwargs["role_id"] = int(role_view.value)
+
+                    await role_view.disable(await view.interaction.original_response(), respond=False)
+                    view.interaction = role_view.interaction # Change the used interaction to the unused one
+
+                new_view = View(self.user_id)
+                new_view.add_item(Button(label="Yes", style=discord.ButtonStyle.green, custom_id="yes"))
+                new_view.add_item(Button(label="No", style=discord.ButtonStyle.red, custom_id="no"))
+
+                await view.interaction.response.send_message("Would you like to set description and title for this item according to its type?", view=new_view, ephemeral=True)
+
+                await new_view.wait()
+
+                if new_view.timed_out:
+                    return await self.disable(await self.original_interaction.original_response())
+
+                if new_view.value == "yes":
+                    self.kwargs["name"] = self.kwargs["type"].value["name"]
+                    self.kwargs["description"] = self.kwargs["type"].value["description"]
+                    await new_view.interaction.response.send_message(content=":thumbsup: automatically set name and description", ephemeral=True)
+                    await new_view.disable(await view.interaction.original_response())
+                else:
+                    await new_view.interaction.response.send_message(content=":thumbsup: not automatically set name and description", ephemeral=True)
+                    await new_view.disable(await view.interaction.original_response())
+
+        else:
+            self.kwargs["type"] = getattr(PerkType, view.value)
+
+        await view.disable(await interaction.original_response())
+        await (await self.original_interaction.original_response()).edit(embed=AuctionItem(**self.kwargs).to_embed(self.guild))
+
+    @discord.ui.button(label="Featured", emoji="<:unchecked_box:1014279412881051668>", style=discord.ButtonStyle.grey)
+    async def featured(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if not interaction.user.guild_permissions.administrator:
+            return await interaction.response.send_message("You must have be an admin to create a featured auction", ephemeral=True)
+
+        self.kwargs["featured"] = button.style == discord.ButtonStyle.grey
+        for child in self.children:
+            if child.label == "Featured":
+                child.emoji = "<:checked_box:1014279465624408214>" if self.kwargs["featured"] else "<:unchecked_box:1014279412881051668>"
+                child.style = discord.ButtonStyle.green if self.kwargs["featured"] else discord.ButtonStyle.grey
+                break
+
+        await interaction.response.edit_message(embed=AuctionItem(**self.kwargs).to_embed(self.guild), view=self)
+
+    @discord.ui.button(label="Publish", style=discord.ButtonStyle.green)
+    async def publish(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        for key, value in self.kwargs.items():
+            if value is None and not key in ["image", "colour", "role_id"]:
+                return await interaction.response.send_message("You must fill out all fields except image and colour to publish an auction", ephemeral=True)
+                
+        self.kwargs["ending_at"] = datetime.now() + self._ending_in
+        auction = Auction()
+        final_item = AuctionItem(auction=auction, **self.kwargs)
+        auction.add_item(final_item)
+
+        await interaction.response.send_message("Auction item published!", ephemeral=True)
+        await self.disable(await self.original_interaction.original_response())
+        self.stop()
 
 class Potato(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
     potato = discord.app_commands.Group(name="potato", description="Potato commands", guild_ids=[GUILD_OBJECT.id])
+    auctions = discord.app_commands.Group(name="auctions", description="Auction off your items or get them from other people", guild_ids=[GUILD_OBJECT.id], parent=potato)
+
+    @property
+    def guild(self) -> discord.Guild:
+        return self.client.get_guild(GUILD_OBJECT.id)
+
+    @property
+    def potato_channel(self) -> discord.TextChannel:
+        return self.guild.get_channel(self.client.server_info.POTATO_BONUS_CHANNEL)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        await self.client.wait_until_ready()
+        self.auction_loop.start()
+
+    @tasks.loop(minutes=1)
+    async def auction_loop(self) -> None:
+        """Loop that runs every minute to check if any auctions have ended"""
+        for item in Auction().items:
+            if item.should_end:
+                bids = len(item.bidders)
+                seller = self.guild.get_member(item.listed_by)
+
+                if not bids:
+                    await self.potato_channel.send(f"Nobody bid on `{item.name}` (ID: {item.id}) so it has been removed from the auction")
+                    try:
+                        await seller.send(f"Nobody bid on `{item.name}` (ID: {item.id}) so it has been removed from the auction")
+                    except (discord.HTTPException, AttributeError):
+                        pass
+                    Auction().remove_item(item)
+                    continue
+
+                if item.type == PerkType.ROLE:
+                    role = self.guild.get_role(item.role_id)
+                    if not role in seller.roles and not seller.guild_permissions.administrator:
+                        await self.potato_channel.send(f"The auction for `{item.name}` (ID: {item.id}) ended, but {seller.mention} is not in posession of the role anymore so it has been removed from the auction")
+                        Auction().remove_item(item)
+                        continue
+                
+                elif item.type != PerkType.OTHER:
+                    if not Member(seller.id).has_item(item.type, item.amount):
+                        await self.potato_channel.send(f"The auction for `{item.name}` (ID: {item.id}) ended, but {seller.mention} is not in posession of the item(s) anymore so it has been removed from the auction")
+                        Auction().remove_item(item)
+                        continue
+
+                purchased_by, winning_bid = item.sell(self.guild)
+
+                try:
+                    await seller.send(f"Your auction for `{item.name}` (ID: {item.id}) has ended and has been sold to {purchased_by.mention} for **{winning_bid}** potatoes")
+                except (discord.HTTPException, AttributeError):
+                    pass
+                try:
+                    await purchased_by.send(f"You have won the auction for `{item.name}` (ID: {item.id}) for **{winning_bid}** potatoes")
+                except (discord.HTTPException, AttributeError):
+                    pass
+
+                await self.potato_channel.send(f"`{item.name}` has been sold to {purchased_by.mention} (ID: {item.id}) for **{winning_bid}** potatoes. There was a total of `{bids}` bids")
+
 
     @potato.command()
     @discord.app_commands.describe(other="The member to inspect the potatoes of")
@@ -182,5 +474,91 @@ class Potato(commands.Cog):
         member.add_potatoes(5)
         member.add_cooldown("daily")
         await interaction.response.send_message(content=f"You claimed your daily 5 potatoes :potato:, and now hold onto {member.potatoes} potatos")
+
+    @auctions.command(name="list")
+    async def _list(self, interaction: discord.Interaction):
+        """Lists all the auctions"""
+        auction = Auction()
+
+        if not auction.items:
+            return await interaction.response.send_message("There are no auctions currently running.")
+
+        def make_embed(page, _, pages):
+            embed = auction.sorted_items[page-1].to_embed(interaction.guild)
+            embed.set_footer(text=f"Page {page}/{len(pages)}")
+
+            return embed
+
+        return await Paginator(interaction, func=make_embed, pages=auction.sorted_items, max_pages=len(auction.items)).start()
+
+    @auctions.command()
+    async def create(self, interaction: discord.Interaction):
+        """Creates an auction"""
+        if not self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You must be verified to create an auction.", ephemeral=True)
+
+        view = CreateAuctionView(interaction.user.id, self.client.server_info.AUCTIONABLE_ROLES,interaction)
+
+        await interaction.response.send_message("Please edit this preview of your auction listing and then submit it.", embed=AuctionItem().to_embed(self.guild), view=view, ephemeral=True)
+
+        await view.wait()
+
+    @auctions.command()
+    @discord.app_commands.describe(item_id="The item to bid on", bid="The amount to bid", maximum_bid="Automatically overbid anyone below this amount")
+    async def bid(self, interaction: discord.Interaction, item_id: int, bid: int, maximum_bid: int = None):
+        """Bids on an item"""
+        auction = Auction()
+
+        if item_id not in [i.id for i in auction.items]:
+            return await interaction.response.send_message("That item does not exist.", ephemeral=True)
+
+        item = auction.item_where_id(item_id)
+
+        if item.listed_by == interaction.user.id:
+            return await interaction.response.send_message("You cannot bid on your own item.", ephemeral=True)
+
+        if item.current_price >= bid:
+            return await interaction.response.send_message("Your bid is lower than the current bid.", ephemeral=True)
+
+        if bid > Member(interaction.user.id).potatoes:
+            return await interaction.response.send_message("You do not have enough potatoes to bid that much.", ephemeral=True)
+
+        highest = item.bid(interaction.user, bid, maximum_bid)
+        item.sync() # Sync the item with the database
+
+        if highest:
+            await interaction.response.send_message("You have successfully bid on this item.", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"You have been outbid. The new current bid is {item.current_price}", ephemeral=True)
+
+    @auctions.command()
+    @discord.app_commands.describe(item_id="The item to remove")
+    async def remove(self, interaction: discord.Interaction, item_id: int):
+        """Removes an item from the auction"""
+        auction = Auction()
+
+        if item_id not in [i._index for i in auction.items]:
+            return await interaction.response.send_message("That item does not exist.", ephemeral=True)
+
+        item = auction.item_where_id(item_id)
+
+        if item.listed_by != interaction.user.id and self.client.server_info.TRUSTED_ROLE not in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You cannot remove an item that you do not own or without being a moderator.", ephemeral=True)
+
+        auction.remove_item(item)
+        await interaction.response.send_message("You have successfully removed this item from the auction.", ephemeral=True)
+
+    @auctions.command()
+    @discord.app_commands.describe(item_id="The item to view")
+    async def view(self, interaction: discord.Interaction, item_id: int):
+        """View infos about an item being auctioned by its id"""
+        auction = Auction()
+
+        if item_id not in [i.id for i in auction.items]:
+            return await interaction.response.send_message("That item does not exist.", ephemeral=True)
+
+        item = auction.item_where_id(item_id)
+
+        await interaction.response.send_message(embed=item.to_embed(interaction.guild))
 
 Cog = Potato

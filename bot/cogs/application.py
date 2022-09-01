@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from typing import Union
 
+from bot.__init__ import Bot
 from bot.utils.interactions import Modal, View, Button
 from bot.static.constants import QUESTIONS, GUILD_OBJECT
 
@@ -22,7 +23,7 @@ class ApplicationModal(Modal):
 
 class Application(commands.Cog):
 
-    def __init__(self, client: commands.Bot):
+    def __init__(self, client: Bot):
         self.client = client
 
     async def cog_load(self):
