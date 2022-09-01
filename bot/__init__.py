@@ -30,7 +30,7 @@ class Bot(commands.Bot):
 
     async def setup_hook(self):
         await self.load_extension("jishaku")
-        # await self.tree.sync() # No global commands currently, though maybe in the future so leaving it in.
+        await self.tree.sync() # No global commands currently, though maybe in the future so leaving it in.
         await self.tree.sync(guild=GUILD_OBJECT) # Loads the commands for the server.
 
     async def _change_presence(self) -> None:
