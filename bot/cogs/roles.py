@@ -185,6 +185,7 @@ class Roles(commands.Cog):
                     else:
                         sos_channel = self.guild.get_channel(self.client.server_info.SOS_CHANNEL)
                         await sos_channel.send(f"{interaction.user.mention} could use some help <@&712375696642801854>")
+                        interaction = view.interaction
 
             await interaction.user.add_roles(self.guild.get_role(int(role.value)))
             return await interaction.response.send_message(f"You have been assigned the {role.name} role!")
