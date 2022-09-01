@@ -92,11 +92,14 @@ class Various(commands.Cog):
 
     @discord.app_commands.command()
     @discord.app_commands.guilds(GUILD_OBJECT)
+    @discord.app_commands.describe(command="The command to see the source code of")
     async def source(self, interaction: discord.Interaction, command: str = None):
         """
         Links to the bots code, or a specific command's
         """
-        # noinspection PyGlobalUndefined
+        # This command was taken and modified from
+        # https://github.com/LeoCx1000/discord-bots/blob/master/DuckBot/cogs/info.py
+
         global obj
         source_url = "https://github.com/Kile/Nico"
         branch = "master"
@@ -117,7 +120,7 @@ class Various(commands.Cog):
             )
 
         if command == "help":
-            return
+            return # There is no help slash command so this will never be true
             src = type(self.bot.help_command)
             module = src.__module__
             filename = inspect.getsourcefile(src)
