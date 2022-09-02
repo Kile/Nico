@@ -469,11 +469,11 @@ class Potato(commands.Cog):
         """Gives you daily potatoes"""
         member = Member(interaction.user.id)
         if member.has_valid_cooldown("daily", hours=24):
-            return await interaction.response.send_message(f"You can't get daily potatoes yet, you can claim them <t:{int((member.cooldowns['daily'] + timedelta(hours=14)).timestamp())}:R>")
+            return await interaction.response.send_message(f"You can't get daily potatoes yet, you can claim them <t:{int((member.cooldowns['daily'] + timedelta(hours=24)).timestamp())}:R>")
 
-        member.add_potatoes(5)
+        member.add_potatoes(3)
         member.add_cooldown("daily")
-        await interaction.response.send_message(content=f"You claimed your daily 5 potatoes :potato:, and now hold onto {member.potatoes} potatos")
+        await interaction.response.send_message(content=f"You claimed your daily 3 potatoes :potato:, and now hold onto {member.potatoes} potatos")
 
     @auctions.command(name="list")
     async def _list(self, interaction: discord.Interaction):
