@@ -326,7 +326,7 @@ class AuctionItem:
     @property
     def includes_discord_perks(self) -> bool:
         """Returns whether the item includes discord perks"""
-        return self.type in (PerkType.CUSTOM_ROLE, PerkType.CUSTOME_EMOTE, PerkType.CUSTOM_STICKER, PerkType.ROLE)
+        return self.type in (PerkType.CUSTOM_ROLE, PerkType.CUSTOM_EMOTE, PerkType.CUSTOM_STICKER, PerkType.ROLE)
 
     @property
     def should_end(self) -> bool:
