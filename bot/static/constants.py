@@ -22,6 +22,8 @@ POTATO = DB["potato"]
 
 DISBOARD = 302050872383242240
 
+CREATE_ROLE_WITH_COLOUR = False # Wether users can create their custom roles with a custom colour or not
+
 ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]
 
 TRIALS = CONSTANTS.find_one({"_id": "trials"})["active"] if CONSTANTS.find_one({"_id": "trials"}) else False
@@ -117,6 +119,18 @@ SERVER_QUESTIONS = [
     {
         "question": "Are you allowed to swear in #general?",
         "answer": ["no", "no i am not", "not allowed", "not", "with censor", "only when censoring", "censor"]
+    },
+    {
+        "question": "Are we mental health professionals?",
+        "answer": ["no", "no you are not", "no you aren't"]
+    },
+    {
+        "question": "What role do all staff members have?",
+        "answer": ["staff", "staff role", "<@&738317128930689055>", "@staff"]
+    },
+    {
+        "question": "What is our bot channel?",
+        "answer": ["bot-fun", "bot fun", "#bot-fun", "#bot fun", "<#739525325267927082>", ":space_invader:bot-fun", ":space_invader:bot fun", "#:space_invader:bot-fun", "#👾bot-fun", "👾bot-fun", "👾bot fun", "#👾bot fun"]
     }
 ]
 
@@ -148,7 +162,8 @@ class KITDServer:
     CHAT_REVIVE_ROLE = 1011764789128744970
     PREMIUM_ROLES = [717054751778275378, 1012105688140492912]
     VOTED_ROLE = 738118004994342940
-    AUCTIONABLE_ROLES = []
+    AUCTIONABLE_ROLES = [1015369303257776140]
+    AUCTION_PING = 1015370996464767058
 
 class TestServer:
     ID = 843442230547054602
@@ -179,6 +194,7 @@ class TestServer:
     PREMIUM_ROLES = []
     VOTED_ROLE = 1012113772464316428
     AUCTIONABLE_ROLES = [1012113772464316428]
+    AUCTION_PING = 1015370148615561348
 
 class ServerInfo:
     KITD = KITDServer

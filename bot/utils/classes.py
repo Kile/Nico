@@ -185,7 +185,7 @@ class Member:
 
 class PerkType(Enum):
     CUSTOM_ROLE = {"name": "Custom Role", "description": "Gives you a custom role you can design yourself", "item": "custom_role"}
-    CUSTOME_EMOTE = {"name": "Custom Emote", "description": "Allowes you to design and add a custom emote", "item": "emote"}
+    CUSTOM_EMOTE = {"name": "Custom Emote", "description": "Allowes you to design and add a custom emote", "item": "emote"}
     CUSTOM_STICKER = {"name": "Custom Sticker", "description": "Allows you to design and add a custom sticker", "item": "sticker"}
     ROLE = {"name": "Role", "description": "Gives you a role", "item": "role"}
 
@@ -266,6 +266,17 @@ class PotatoMember:
         
         return type.value['item'] in self.items and self.items[type.value['item']] >= amount
 
+    def remove_item(self, item: PerkType, amount: int = 1) -> None:
+        """Removes an item from the user"""
+        if item.value["item"] not in self.items:
+            raise ValueError("User does not have this item")
+
+        self.items[item.value["item"]] -= amount
+        if self.items[item.value["item"]] == 0:
+            del self.items[item.value["item"]]
+
+        POTATO.update_one({"_id": self.id}, {"$set": {"items": self.items}})
+
 class AuctionItem:
     """Represents an item in an auction"""
     def __init__(self, auction = None, index: int = None, **kwargs):
@@ -274,13 +285,15 @@ class AuctionItem:
         
         self.id = kwargs.get("id")
         # Setting self.id to the first id to the lowest possible number not yet in auction.items
-        if self.id is None and auction:
-            self.id = min([i["id"] for i in self.auction.raw_items] + [index]) if index else min([i["id"] for i in self.auction.raw_items] + [len(self.auction.raw_items)])
+        if self.id is None and auction and auction.items:
+            self.id = min([i for i in range(max([item.id for item in auction.items])+2) if i not in [item.id for item in auction.items]])
+        elif self.id is None:
+            self.id = 0
 
         self.name: str = kwargs.get("name")
         self.description: str = kwargs.get("description")
         self.image: str = kwargs.get("image")
-        self.type: PerkType = getattr(PerkType, kwargs.get("type") or "NOT_SPECIFIED") if isinstance(kwargs.get("type"), str) else kwargs.get("type")
+        self.type: PerkType = getattr(PerkType, kwargs.get("type") or "NOT_SPECIFIED") if isinstance(kwargs.get("type"), str) else (kwargs.get("type") or PerkType.NOT_SPECIFIED)
         self.colour: int = kwargs.get("colour") or 0x2f3136
         self.amount: int = kwargs.get("amount") or 1
         self.bidders: Dict[int, Dict[str, int]] = kwargs.get("bidders", {})
@@ -320,20 +333,22 @@ class AuctionItem:
         """Returns whether the item should end"""
         return self.ending_at < datetime.now()
 
-    def to_embed(self, guild: discord.Guild) -> discord.Embed:
+    def to_embed(self, guild: discord.Guild, dynamic_info: bool = True) -> discord.Embed:
         """Returns the item as an embed"""
         embed = discord.Embed(title=self.name or "Not named", description=(self.description or "No description"), color=self.colour)
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/843442230547054605/1014678566732038235/3460-verified.png" if self.featured else None)
         embed.set_image(url=self.image)
-        embed.add_field(name="Current Price", value=f"{self.current_price} potatoes")
-        embed.add_field(name="Highest bidder", value=guild.get_member(self._find_first_valid_bidder()) if self._find_first_valid_bidder() else "None yet")
         embed.add_field(name="Listing Price", value=f"{self.listing_price} potatoes")
         embed.add_field(name="Ending", value="<t:" + str(int(self.ending_at.timestamp())) + ":R>")
-        embed.add_field(name="Is discord perk", value=(f"Yes:\n{self.type.value['item']}" + (f"\n<@&{self.role_id}>" if self.type.ROLE else "")) if self.includes_discord_perks else "No")
-        embed.add_field(name="Bidders", value=f"{len(self.bidders)}")
+        embed.add_field(name="Is discord perk", value=(f"Yes:\n{self.type.value['item']}" + ((f"\n<@&{self.role_id}>" if self.type.ROLE else "")) if self.includes_discord_perks else "No") if self.type != PerkType.NOT_SPECIFIED else "Not specified")
         embed.add_field(name="Amount", value=f"{self.amount}")
         embed.add_field(name="Listed by", value=guild.get_member(self.listed_by).mention if guild.get_member(self.listed_by) else "Unknown")
         embed.add_field(name="Item ID", value=f"{self.id}" if not self.id is None else "Not yet listed")
+
+        if dynamic_info: # We do not want this posted when the auction is created as it is not relevant
+            embed.add_field(name="Current Price", value=f"{self.current_price} potatoes")
+            embed.add_field(name="Highest bidder", value=guild.get_member(self._find_first_valid_bidder()) if self._find_first_valid_bidder() else "None yet")
+            embed.add_field(name="Bidders", value=f"{len(self.bidders)}")
         return embed
 
     def to_dict(self) -> dict:
@@ -469,8 +484,10 @@ class Auction:
 
     @property
     def sorted_items(self) -> List[AuctionItem]:
-        """Returns the items sorted by current price and by wether they are featured or not"""
-        return sorted(self.items, key=lambda i: (i.current_price, i.featured), reverse=True)
+        """Returns the items sorted by current price and by wether they are featured or not, always preferring featured ones"""
+        featured = [i for i in self.items if i.featured]
+        featured.extend(sorted([i for i in self.items if not i.featured], key=lambda x: x.current_price, reverse=True))
+        return featured
 
     def item_where_id(self, id: int) -> AuctionItem:
         """Returns the item with the supplied id"""

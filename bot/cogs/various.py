@@ -119,27 +119,28 @@ class Various(commands.Cog):
                 view=Url(source_url, label="Open on GitHub", emoji="<:github:744345792172654643>")
             )
 
-        if command == "help":
-            return # There is no help slash command so this will never be true
-            src = type(self.bot.help_command)
-            module = src.__module__
-            filename = inspect.getsourcefile(src)
-            obj = "help"
-        else:
-            obj = self.client.tree.get_command(command.replace(".", " "), guild=interaction.guild if command != "join" else None)
-            if obj is None:
-                embed = discord.Embed(title=f"Couldn't find command.", description=mpl_advice)
-                embed.set_image(
-                    url="https://cdn.discordapp.com/attachments/879251951714467840/896445332509040650/unknown.png"
-                )
-                return await interaction.response.send_message(
-                    embed=embed,
-                    view=Url(source_url, label="Open on GitHub", emoji="<:github:744345792172654643>")
-                )
+        for cmd in self.client.tree.walk_commands(guild=interaction.guild if command != "join" else None):
+            if cmd.qualified_name == command:
+                if isinstance(cmd, discord.app_commands.Group):
+                    return await interaction.response.send_message(
+                        f"{interaction.user.mention} I can't show the source code of a group command. Please specify a subcommand."
+                    )
+                obj = cmd
+                break
 
-            src = obj.callback.__code__
-            module = obj.callback.__module__
-            filename = src.co_filename
+        if obj is None:
+            embed = discord.Embed(title=f"Couldn't find command.", description=mpl_advice, colour=discord.Colour.red())
+            embed.set_image(
+                url="https://cdn.discordapp.com/attachments/879251951714467840/896445332509040650/unknown.png"
+            )
+            return await interaction.response.send_message(
+                embed=embed,
+                view=Url(source_url, label="Open on GitHub", emoji="<:github:744345792172654643>")
+            )
+
+        src = obj.callback.__code__
+        module = obj.callback.__module__
+        filename = src.co_filename
 
         lines, firstlineno = inspect.getsourcelines(src)
         if not module.startswith("discord"):

@@ -1,21 +1,33 @@
 import discord
+import aiohttp
 
 from discord.ext import commands, tasks
 
+from io import BytesIO
 from random import randint
 from typing import Literal, List, Tuple
 from datetime import timedelta, datetime
 
 from bot.__init__ import Bot
 from bot.utils.classes import PotatoMember as Member, Auction, AuctionItem, PerkType
-from bot.static.constants import GUILD_OBJECT
+from bot.static.constants import GUILD_OBJECT, CREATE_ROLE_WITH_COLOUR
 from bot.utils.paginator import Paginator
 from bot.utils.interactions import Modal, View, Select, Button
 from bot.utils.timeconverter import TimeConverter
 
+class CreateRoleModal(Modal):
+
+    def __init__(self, user_id: int, colour: bool):
+        super().__init__(user_id=user_id, title="Create custom Role")
+        self.add_item(discord.ui.TextInput(label="Role name", placeholder="Role name", required=True, max_length=32, min_length=2, style=discord.TextStyle.short))
+        self.add_item(discord.ui.TextInput(label="Role icon", placeholder="https://images.com/some_image.jpeg", required=False, max_length=256, min_length=2, style=discord.TextStyle.short))
+
+        if colour:
+            self.add_item(discord.ui.ColorPicker(label="Role colour", default=str(discord.Color.default()), required=True))
+
 class CreateAuctionView(View):
 
-    def __init__(self, user_id: int, auctionable_roles: List[int], original_interaction: discord.Interaction):
+    def __init__(self, user_id: int, auctionable_roles: List[int], premium_roles: List[int], original_interaction: discord.Interaction):
         super().__init__(user_id)
         self.kwargs = AuctionItem.raw_kwargs()
         self.kwargs["listed_by"] = user_id
@@ -23,7 +35,9 @@ class CreateAuctionView(View):
         self._raw_ending_in = None
         self.original_interaction = original_interaction
         self.auctionable_roles = auctionable_roles
+        self.premium_roles = premium_roles
         self.guild = self.original_interaction.guild
+        self.item = None
 
     async def _modal_edit(
         self,
@@ -161,7 +175,7 @@ class CreateAuctionView(View):
 
         if not getattr(PerkType, view.value) in [PerkType.OTHER, PerkType.NOT_SPECIFIED]:
             if not Member(interaction.user.id).has_item(getattr(PerkType, view.value), self.kwargs["amount"]) and not interaction.user.guild_permissions.administrator:
-                await interaction.response.send_message("You don't have the required item(s) to auction this", ephemeral=True)
+                await view.interaction.response.send_message("You don't have the required item(s) to auction this", ephemeral=True)
 
             else:
                 self.kwargs["type"] = getattr(PerkType, view.value)
@@ -216,8 +230,8 @@ class CreateAuctionView(View):
 
     @discord.ui.button(label="Featured", emoji="<:unchecked_box:1014279412881051668>", style=discord.ButtonStyle.grey)
     async def featured(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if not interaction.user.guild_permissions.administrator:
-            return await interaction.response.send_message("You must have be an admin to create a featured auction", ephemeral=True)
+        if not interaction.user.guild_permissions.administrator and len([r for r in interaction.user.roles if r.id in self.premium_roles]):
+            return await interaction.response.send_message("You must have be an admin or premium member to create a featured auction", ephemeral=True)
 
         self.kwargs["featured"] = button.style == discord.ButtonStyle.grey
         for child in self.children:
@@ -238,6 +252,7 @@ class CreateAuctionView(View):
         auction = Auction()
         final_item = AuctionItem(auction=auction, **self.kwargs)
         auction.add_item(final_item)
+        self.item = final_item
 
         await interaction.response.send_message("Auction item published!", ephemeral=True)
         await self.disable(await self.original_interaction.original_response())
@@ -297,7 +312,7 @@ class Potato(commands.Cog):
                 purchased_by, winning_bid = item.sell(self.guild)
 
                 try:
-                    await seller.send(f"Your auction for `{item.name}` (ID: {item.id}) has ended and has been sold to {purchased_by.mention} for **{winning_bid}** potatoes")
+                    await seller.send(f"Your auction for `{item.name}` (ID: {item.id}) has ended and has been sold to **{purchased_by}** (ID: {purchased_by.id}) for **{winning_bid}** potatoes")
                 except (discord.HTTPException, AttributeError):
                     pass
                 try:
@@ -475,6 +490,130 @@ class Potato(commands.Cog):
         member.add_cooldown("daily")
         await interaction.response.send_message(content=f"You claimed your daily 3 potatoes :potato:, and now hold onto {member.potatoes} potatos")
 
+    @potato.command()
+    async def redeem(self, interaction: discord.Interaction, item: Literal["Custom emoji", "Custom role", "Custom sticker"]):
+        """Redeem an item won from an auction"""
+        member = Member(interaction.user.id)
+
+        items = {
+            "Custom emoji": PerkType.CUSTOM_EMOTE,
+            "Custom role": PerkType.CUSTOM_ROLE,
+            "Custom sticker": PerkType.CUSTOM_STICKER,
+        }
+
+        if not member.has_item(items[item]):
+            return await interaction.response.send_message(f"You do not have any {item}s to redeem!")
+
+        if item == "Custom emoji":
+            modal = Modal(interaction.user.id, title="Emoji creator")
+            modal.add_item(discord.ui.TextInput(label="Emoji name", placeholder="Emoji_name", required=True, max_length=25))
+            modal.add_item(discord.ui.TextInput(label="Emoji URL", placeholder="https://example.com/emoji.png", required=True, max_length=255))
+
+            await interaction.response.send_modal(modal)
+
+            await modal.wait()
+
+            if modal.timed_out:
+                return 
+
+            await modal.interaction.response.defer()
+
+            # Save emoji to io bytes
+            emoji_name: str = modal.values[0]
+            emoji_url: str = modal.values[1]
+            try:
+                emoji_response = await self.client.session.get(emoji_url)
+                emoji_bytes = await emoji_response.read()
+            except aiohttp.ClientError as e:
+                return await modal.interaction.followup.send(f"Error getting emoji: {e}")
+
+            # Create emoji
+            try:
+                emoji = await interaction.guild.create_custom_emoji(name=emoji_name.replace(" ", "_"), image=emoji_bytes)
+            except discord.HTTPException:
+                return await modal.interaction.followup.send(f"Error creating emoji. Make sure the image url is valid and the file is not too big")
+
+            member.remove_item(items[item])
+            return await modal.interaction.followup.send(f"You created the emoji {emoji}!")
+
+        elif item == "Custom role":
+            modal = CreateRoleModal(interaction.user.id, colour = CREATE_ROLE_WITH_COLOUR)
+
+            await interaction.response.send_modal(modal)
+
+            await modal.wait()
+
+            if modal.timed_out:
+                return 
+
+            await modal.interaction.response.defer()
+
+            role_name: str = modal.values[0]
+            role_icon = modal.values[1]
+            
+            if CREATE_ROLE_WITH_COLOUR:
+                try:
+                    role_colour = discord.Colour.from_str(modal.values[2])
+                except ValueError:
+                    return await modal.interaction.followup.send(f"Error creating role: Invalid colour")
+            else:
+                role_colour = discord.Color.default()
+
+            # Save role icon
+            if role_icon:
+                try:
+                    role_icon_response = await self.client.session.get(role_icon)
+                    role_icon_bytes = await role_icon_response.read()
+                except aiohttp.ClientError as e:
+                    role_icon_bytes = role_icon # If the icon is an emoji
+
+            # Create role
+            try:
+                role = await interaction.guild.create_role(name=role_name, colour=role_colour, reason=f"Created by {interaction.user}", display_icon=role_icon_bytes if role_icon else None)
+            except discord.HTTPException:
+                return await modal.interaction.followup.send(f"Error creating role. Make sure the icon url/emoji is valid and not too big")
+
+            member.remove_item(items[item])
+            await interaction.user.add_roles(role) # Adds the role to the user
+            return await modal.interaction.followup.send(f"You created the role {role.name}!")
+
+        elif item == "Custom sticker":
+            modal = Modal(interaction.user.id, title="Sticker creator")
+            modal.add_item(discord.ui.TextInput(label="Sticker URL", placeholder="https://example.com/sticker.png", required=True, max_length=255))
+            modal.add_item(discord.ui.TextInput(label="Sticker name", placeholder="Sticker name", required=True, max_length=25))
+            modal.add_item(discord.ui.TextInput(label="Sticker description", placeholder="Sticker description", required=True, max_length=255))
+
+            await interaction.response.send_modal(modal)
+
+            await modal.wait()
+
+            if modal.timed_out:
+                return 
+
+            await modal.interaction.response.defer()
+
+            sticker_url: str = modal.values[0]
+            sticker_name: str = modal.values[1]
+            sticker_description: str = modal.values[2]
+
+            # Fetch sticker bytes and save them to a discord.File
+            try:
+                sticker_response = await self.client.session.get(sticker_url)
+                sticker_bytes = await sticker_response.read()
+                sticker_file = discord.File(BytesIO(sticker_bytes), filename=sticker_name)
+            except aiohttp.ClientError as e:
+                return await modal.interaction.followup.send(f"Error getting sticker: {e}")
+
+            # Create sticker
+            try:
+                sticker = await interaction.guild.create_sticker(name=sticker_name,description=sticker_description,file=sticker_file, emoji="\U00002764")
+            except discord.HTTPException:
+                return await modal.interaction.followup.send(f"Error creating sticker. Make sure the image url is valid and not too big. Only png and apng are supported file types.")
+
+            member.remove_item(items[item])
+            return await modal.interaction.followup.send(f"You created the sticker {sticker.name}!")
+
+
     @auctions.command(name="list")
     async def _list(self, interaction: discord.Interaction):
         """Lists all the auctions"""
@@ -497,11 +636,15 @@ class Potato(commands.Cog):
         if not self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("You must be verified to create an auction.", ephemeral=True)
 
-        view = CreateAuctionView(interaction.user.id, self.client.server_info.AUCTIONABLE_ROLES,interaction)
+        view = CreateAuctionView(interaction.user.id, self.client.server_info.AUCTIONABLE_ROLES, self.client.server_info.PREMIUM_ROLES, interaction)
 
         await interaction.response.send_message("Please edit this preview of your auction listing and then submit it.", embed=AuctionItem().to_embed(self.guild), view=view, ephemeral=True)
 
         await view.wait()
+
+        if not view.item: return
+
+        await self.potato_channel.send(content=f"<@&{self.client.server_info.AUCTION_PING}> A new auction has been created!", embed=view.item.to_embed(interaction.guild, dynamic_info=False))
 
     @auctions.command()
     @discord.app_commands.describe(item_id="The item to bid on", bid="The amount to bid", maximum_bid="Automatically overbid anyone below this amount")
@@ -523,12 +666,15 @@ class Potato(commands.Cog):
         if bid > Member(interaction.user.id).potatoes:
             return await interaction.response.send_message("You do not have enough potatoes to bid that much.", ephemeral=True)
 
+        previous_highest = item._find_first_valid_bidder()
         highest = item.bid(interaction.user, bid, maximum_bid)
         item.sync() # Sync the item with the database
 
         if highest:
+            await self.potato_channel.send(f"{interaction.user.mention} now has the highest bid of {item.current_price} potatoes :potato:{f' , outbidding <@{previous_highest[0]}>,' if previous_highest else ''} on `{item.name}`")
             await interaction.response.send_message("You have successfully bid on this item.", ephemeral=True)
         else:
+            await self.potato_channel.send(f"{interaction.user.mention} tried to bid on `{item.name}` but was immediately outbid by <@{previous_highest[0]}> to a new price of {item.current_price} potatoes :potato:")
             await interaction.response.send_message(f"You have been outbid. The new current bid is {item.current_price}", ephemeral=True)
 
     @auctions.command()

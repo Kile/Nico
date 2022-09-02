@@ -24,6 +24,8 @@ class Bot(commands.Bot):
 
         self.server_info = ServerInfo.TEST if self.is_dev else ServerInfo.KITD
 
+        self.session: aiohttp.ClientSession = None
+
     def convert_to_timestamp(self, id: int, args: str = "f") -> str:
         """Turns a discord snowflake into a discord timestamp string"""
         return f"<t:{int((id >> 22) / 1000) + 1420070400}:{args}>"
