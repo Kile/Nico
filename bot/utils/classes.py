@@ -340,7 +340,7 @@ class AuctionItem:
         embed.set_image(url=self.image)
         embed.add_field(name="Listing Price", value=f"{self.listing_price} potatoes")
         embed.add_field(name="Ending", value="<t:" + str(int(self.ending_at.timestamp())) + ":R>")
-        embed.add_field(name="Is discord perk", value=(f"Yes:\n{self.type.value['item']}" + ((f"\n<@&{self.role_id}>" if self.type.ROLE else "")) if self.includes_discord_perks else "No") if self.type != PerkType.NOT_SPECIFIED else "Not specified")
+        embed.add_field(name="Is discord perk", value=((f"Yes:\n{self.type.value['item']}" + (f"\n<@&{self.role_id}>" if self.type == PerkType.ROLE else "")) if self.includes_discord_perks else "No") if self.type != PerkType.NOT_SPECIFIED else "Not specified")
         embed.add_field(name="Amount", value=f"{self.amount}")
         embed.add_field(name="Listed by", value=guild.get_member(self.listed_by).mention if guild.get_member(self.listed_by) else "Unknown")
         embed.add_field(name="Item ID", value=f"{self.id}" if not self.id is None else "Not yet listed")
