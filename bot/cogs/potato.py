@@ -304,7 +304,7 @@ class Potato(commands.Cog):
                         continue
                 
                 elif item.type != PerkType.OTHER:
-                    if not Member(seller.id).has_item(item.type, item.amount):
+                    if not Member(seller.id).has_item(item.type, item.amount) and not seller.guild_permissions.administrator:
                         await self.potato_channel.send(f"The auction for `{item.name}` (ID: {item.id}) ended, but {seller.mention} is not in posession of the item(s) anymore so it has been removed from the auction")
                         Auction().remove_item(item)
                         continue
