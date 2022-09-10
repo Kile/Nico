@@ -92,7 +92,10 @@ class Application(commands.Cog):
             role = self.client.get_guild(self.client.server_info.ID).get_role(self.client.server_info.VERIFIED_ROLE)
             await member.add_roles(role)
             await interaction.response.send_message(f"✅ {member.mention} is now verified.", ephemeral=True)
-            await member.send(f"Your application in Kids In The Dark has been reviewed and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
+            try:
+                await member.send(f"Your application in Kids In The Dark has been reviewed and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
+            except discord.HTTPException:
+                pass # Ignore closed dms
         else:
             await interaction.response.send_message(f"{member.mention} is already verified.", ephemeral=True)
 
