@@ -184,8 +184,8 @@ class Roles(commands.Cog):
                     if view.value == "cancel":
                         return await view.interaction.response.send_message("You have successfully cancelled. Have a great rest of your day.", ephemeral=True)
                     else:
-                        sos_channel = self.guild.get_channel(self.client.server_info.SOS_CHANNEL)
-                        await sos_channel.send(f"{interaction.user.mention} could use some help <@&712375696642801854>")
+                        sos_channel: discord.ForumChannel = self.guild.get_channel(self.client.server_info.SOS_CHANNEL)
+                        await sos_channel.create_thread(name=f"SOS forum for {interaction.user}", content=f"{interaction.user.mention} could use some help <@&{self.client.server_info.WILL_HELP_ROLE}>")
                         interaction = view.interaction
 
             await interaction.user.add_roles(self.guild.get_role(int(role.value)))
