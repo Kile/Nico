@@ -78,7 +78,7 @@ class Various(commands.Cog):
 
     @discord.app_commands.command()
     @discord.app_commands.guilds(GUILD_OBJECT)
-    async def close(self, interaction: discord.Interaction):
+    async def close(self, interaction: discord.Interaction, reason: str = None):
         """Closes the current help thread"""
 
         if not isinstance(interaction.channel, discord.Thread):
@@ -87,10 +87,15 @@ class Various(commands.Cog):
         if not isinstance(interaction.channel.parent, discord.ForumChannel):
             return await interaction.response.send_message("This command can only be used in a forum thread", ephemeral=True)
 
-        if not (interaction.user in (await interaction.channel.fetch_message(interaction.channel.id)).mentions) and not self.client.server_info.WILL_HELP_ROLE in [r.id for r in interaction.user.roles]:
+        # Check if the channel is already closed
+        if interaction.channel.archived:
+            return await interaction.response.send_message("This thread is already closed!", ephemeral=True)
+
+        if not (((interaction.user in (await interaction.channel.fetch_message(interaction.channel.id)).mentions) and interaction.channel_id == self.client.server_info.SOS_CHANNEL) or \
+            interaction.channel.owner) and not self.client.server_info.WILL_HELP_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message(f"You can only use this thread if you have the <@&{self.client.server_info.WILL_HELP_ROLE}> role or are the thread creator.", ephemeral=True)
 
-        await interaction.response.send_message(f"{interaction.user.mention} has closed this post.")
+        await interaction.response.send_message(f"{interaction.user.mention} has closed this post{' with the reason: ' + reason if reason else '.'}", allowed_mentions=discord.AllowedMentions.all())
         await interaction.channel.edit(archived=True, locked=True if self.client.server_info.TRUSTED_ROLE else False)
 
     @discord.app_commands.command()

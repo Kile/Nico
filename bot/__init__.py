@@ -4,8 +4,9 @@ import aiohttp
 from discord.ext import commands
 
 from . import cogs
-from .static.constants import TOKEN, ServerInfo, GUILD_OBJECT, ACTIVITY_EVENT, TRIALS
+from .static.constants import TOKEN, ServerInfo, GUILD_OBJECT, ACTIVITY_EVENT, TRIALS, CONSTANTS
 from .utils.functions import is_dev
+from .utils.interactions import PersistentVerificationView
 
 import logging, sys
 
@@ -34,6 +35,13 @@ class Bot(commands.Bot):
         await self.load_extension("jishaku")
         await self.tree.sync() # No global commands currently, though maybe in the future so leaving it in.
         await self.tree.sync(guild=GUILD_OBJECT) # Loads the commands for the server.
+
+        application_views = CONSTANTS.find_one({"_id": "pending_applications"})
+
+        if application_views is None: return
+
+        for view in application_views["ids"]:
+            self.add_view(PersistentVerificationView(view["applicant"]), message_id=view["message"])
 
     async def _change_presence(self) -> None:
         """Changes the bot's presence to the current membercount"""

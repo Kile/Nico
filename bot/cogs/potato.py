@@ -671,7 +671,7 @@ class Potato(commands.Cog):
         item.sync() # Sync the item with the database
 
         if highest:
-            await self.potato_channel.send(f"{interaction.user.mention} now has the highest bid of {item.current_price} potatoes :potato:{f' , outbidding <@{previous_highest[0]}>,' if previous_highest else ''} on `{item.name}`")
+            await self.potato_channel.send(f"{interaction.user.mention} now has the highest bid of {item.current_price} potatoes :potato:{f' , outbidding <@{previous_highest}>,' if previous_highest else ''} on `{item.name}`")
             await interaction.response.send_message("You have successfully bid on this item.", ephemeral=True)
         else:
             await self.potato_channel.send(f"{interaction.user.mention} tried to bid on `{item.name}` but was immediately outbid by <@{previous_highest[0]}> to a new price of {item.current_price} potatoes :potato:")

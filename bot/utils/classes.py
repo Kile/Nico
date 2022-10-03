@@ -416,7 +416,7 @@ class AuctionItem:
                     next_amount = real_bids[pos + 1][1]
                     data = self.bidders[str(bidder)]
 
-                    if data["max_id"] and next_amount > data["bid"]: # In this case a max bid from the one below was higher than the bid here, so the lowest max bid is taken
+                    if data["max_bid"] and next_amount > data["bid"]: # In this case a max bid from the one below was higher than the bid here, so the lowest max bid is taken
                         return amount
                     elif next_amount < data["bid"]: # The first bid is enough to outbid the second
                         return data["bid"]

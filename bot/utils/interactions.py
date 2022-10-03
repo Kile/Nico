@@ -1,6 +1,7 @@
 import discord
 
 from typing import Union, List
+from bot.static.constants import ServerInfo, CONSTANTS
 
 class View(discord.ui.View):
     """Subclassing this for buttons enabled us to not have to define interaction_check anymore, also not if we want a select menu"""
@@ -103,3 +104,76 @@ class Select(discord.ui.Select):
             if opt.value == str(self.view.value):
                 opt.default = True
         self.view.stop()
+
+class PersistentVerificationView(discord.ui.View):
+    """A view for persistent verification"""
+    def __init__(self, applicant: int, **kwargs):
+        super().__init__(timeout=None, **kwargs)
+
+        button_verify = discord.ui.Button(label="Verify", custom_id=f"verify:{applicant}", style=discord.ButtonStyle.green)
+        button_verify.callback = self.verify_callback
+
+        button_deny = discord.ui.Button(label="Deny", custom_id=f"deny:{applicant}", style=discord.ButtonStyle.red)
+        button_deny.callback = self.deny_callback
+
+        self.add_item(button_verify)
+        self.add_item(button_deny)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        verifier_role = interaction.guild.get_role(ServerInfo.KITD.WELCOMER_ROLE if interaction.guild.id == ServerInfo.KITD.ID else ServerInfo.TEST.WELCOMER_ROLE) 
+        if not (val := verifier_role in interaction.user.roles):
+            await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+        return val
+
+    async def verify_callback(self, interaction: discord.Interaction):
+        applicant = interaction.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+
+        role = interaction.guild.get_role(ServerInfo.KITD.VERIFIED_ROLE if interaction.guild.id == ServerInfo.KITD.ID else ServerInfo.TEST.VERIFIED_ROLE) 
+        # Workaround for not being able to access wether it is a testing evironment or not
+
+        await applicant.add_roles(role)
+        await interaction.response.send_message(f"✅ Verified {applicant.mention}", ephemeral=True)
+        try:
+            await applicant.send(f"Your application in Kids In The Dark has been approved and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
+        except discord.HTTPException:
+            pass # Ignore closed dms
+
+        # Edit the buttons
+        verified_button = discord.ui.Button(style=discord.ButtonStyle.green, label=f"Verified by {interaction.user}", disabled=True)
+        self.clear_items()
+        self.add_item(verified_button)
+
+        await interaction.message.edit(view=self)
+
+        # Clear pending application status
+        new_pending_apps = [x for x in CONSTANTS.find_one({"_id": "pending_applications"})["ids"] if x["applicant"] != applicant.id]
+        CONSTANTS.update_one({"_id": "pending_applications"}, {"$set": {"ids": new_pending_apps}})
+
+    async def deny_callback(self, interaction: discord.Interaction):
+        applicant = interaction.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+
+        # save applicant id to denied database
+        existing = CONSTANTS.find_one({"_id": "denied"})
+
+        if not existing:
+            CONSTANTS.insert_one({"_id": "denied", "ids": [applicant.id]})
+        else:
+            CONSTANTS.update_one({"_id": "denied"}, {"$push": {"ids": applicant.id}})
+
+        await interaction.response.send_message(f"✅ Denied {applicant.mention}", ephemeral=True)
+
+        try:
+            await applicant.send(f"Your application in Kids In The Dark has been denied. If you think this is a mistake, please contact a staff member.")
+        except discord.HTTPException:
+            pass
+
+        # Edit the buttons
+        denied_button = discord.ui.Button(style=discord.ButtonStyle.grey, label=f"Denied by {interaction.user}", disabled=True)
+        self.clear_items()
+        self.add_item(denied_button)
+
+        await interaction.message.edit(view=self)
+
+        # Clear pending application status
+        new_pending_apps = [x for x in CONSTANTS.find_one({"_id": "pending_applications"})["ids"] if x["applicant"] != applicant.id]
+        CONSTANTS.update_one({"_id": "pending_applications"}, {"$set": {"ids": new_pending_apps}})

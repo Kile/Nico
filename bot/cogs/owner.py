@@ -226,5 +226,19 @@ class Owner(commands.Cog):
 
             await interaction.followup.send(":white_check_mark: Trials opened", ephemeral=True)
 
+    @owner.command()
+    @discord.app_commands.describe(user="The user to undeny")
+    async def undeny(self, interaction: discord.Interaction, user: discord.Member):
+        """Allows a previously denied user to apply again"""
+        if not interaction.user.id == self.guild.owner_id:
+            return await interaction.response.send_message("You must be the server owner to use this command", ephemeral=True)
+
+        if not CONSTANTS.find_one({"_id": "denied"}) and not user.id in CONSTANTS.find_one({"_id": "denied"})["ids"]:
+            return await interaction.response.send_message("That user is not denied", ephemeral=True)
+
+        CONSTANTS.update_one({"_id": "denied"}, {"$pull": {"ids": user.id}})
+
+        await interaction.response.send_message(":white_check_mark: User undenied", ephemeral=True)
+
 
 Cog = Owner

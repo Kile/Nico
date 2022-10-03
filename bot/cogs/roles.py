@@ -185,7 +185,18 @@ class Roles(commands.Cog):
                         return await view.interaction.response.send_message("You have successfully cancelled. Have a great rest of your day.", ephemeral=True)
                     else:
                         sos_channel: discord.ForumChannel = self.guild.get_channel(self.client.server_info.SOS_CHANNEL)
-                        await sos_channel.create_thread(name=f"SOS forum for {interaction.user}", content=f"{interaction.user.mention} could use some help <@&{self.client.server_info.WILL_HELP_ROLE}>")
+                        post = await sos_channel.create_thread(name=f"Help forum for {interaction.user.display_name}", content=f"{interaction.user.mention} has picked up the <@&{self.client.server_info.NEED_HELP_ROLE}> role.")
+
+                        to_be_sent = []
+                        will_help_role = self.guild.get_role(self.client.server_info.WILL_HELP_ROLE)
+                        for member in will_help_role.members:
+                            if len("> <@".join(to_be_sent)) + 3 + len(member.mention) > 2000:
+                                # If the max message length is reached, ghostping the recorded people and reset the list
+                                msg = await post.thread.send("> <@".join(to_be_sent))
+                                await msg.delete()
+                                to_be_sent = []
+                            to_be_sent.append(member.mention)
+
                         interaction = view.interaction
 
             await interaction.user.add_roles(self.guild.get_role(int(role.value)))
