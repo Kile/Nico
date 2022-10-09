@@ -29,7 +29,7 @@ ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]
 TRIALS = CONSTANTS.find_one({"_id": "trials"})["active"] if CONSTANTS.find_one({"_id": "trials"}) else False
 
 WELCOME_MESSAGE = \
-""" Welcome to Kids In The Dark **{}**!
+""" Welcome to Nico's Safe Space **{}**!
 I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#711707649829240972>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about what is explained in those channels to ensure you have read them.
 
 Your answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
@@ -164,6 +164,23 @@ class KITDServer:
     VOTED_ROLE = 738118004994342940
     AUCTIONABLE_ROLES = [1015369303257776140]
     AUCTION_PING = 1015370996464767058
+    STAFF_ROLE = 738317128930689055
+    LEVEL_ROLES = {
+        813789401146327070: 1028767978516402296, # Level 10: Apollo
+        813789725722673154: 1028767931812823080, # Level 15: Aphrodite
+        813789854861230121: 1028767710680727592, # Level 20: Artemis
+        813790065654366228: 1028767667491971183, # Level 50: Hermes
+        997254017002512435: 1028767616564744252 # Level 100: Hera
+    }
+
+"""
+Apollo level 10
+Aphrodite level 15
+Artemis level 20
+Demeter level 25
+Hermes level 50
+Hera level 100 
+"""
 
 class TestServer:
     ID = 843442230547054602
@@ -195,6 +212,11 @@ class TestServer:
     VOTED_ROLE = 1012113772464316428
     AUCTIONABLE_ROLES = [1012113772464316428]
     AUCTION_PING = 1015370148615561348
+    STAFF_ROLE = 1
+    LEVEL_ROLES = {
+        1027946396801843252: 1027946473398218752,
+        1027946442431672412: 1027946539508846653
+    }
 
 class ServerInfo:
     KITD = KITDServer

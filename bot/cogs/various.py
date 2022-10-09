@@ -91,7 +91,12 @@ class Various(commands.Cog):
         if interaction.channel.archived:
             return await interaction.response.send_message("This thread is already closed!", ephemeral=True)
 
-        if not (((interaction.user in (await interaction.channel.fetch_message(interaction.channel.id)).mentions) and interaction.channel_id == self.client.server_info.SOS_CHANNEL) or \
+        try:
+            original_message = await interaction.channel.fetch_message(interaction.channel.id)
+        except discord.NotFound:
+            pass # This only means the author of the post now cannot delete it
+
+        if not (((original_message and interaction.user in original_message.mentions) and interaction.channel_id == self.client.server_info.SOS_CHANNEL) or \
             interaction.channel.owner) and not self.client.server_info.WILL_HELP_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message(f"You can only use this thread if you have the <@&{self.client.server_info.WILL_HELP_ROLE}> role or are the thread creator.", ephemeral=True)
 

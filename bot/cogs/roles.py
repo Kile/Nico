@@ -4,7 +4,7 @@ from discord.ext import commands
 from typing import Optional, Any
 
 from bot.__init__ import Bot
-from bot.utils.interactions import View, Button
+from bot.utils.interactions import View, Button, Select
 from bot.static.constants import Sexualities, Romantic, GUILD_OBJECT
 
 Choice = discord.app_commands.Choice
@@ -201,5 +201,43 @@ class Roles(commands.Cog):
 
             await interaction.user.add_roles(self.guild.get_role(int(role.value)))
             return await interaction.response.send_message(f"You have been assigned the {role.name} role!")
+
+    @roles.command()
+    async def cabin(self, interaction: discord.Interaction):
+        """Choose a cabin with this command"""
+        if self.client.server_info.STAFF_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("Staff members can't have cabins since they're already in one!", ephemeral=True)
+
+        cabins = [self.guild.get_role(v) for k, v in self.client.server_info.LEVEL_ROLES.items() if self.guild.get_role(k) in interaction.user.roles]
+
+        if not cabins:
+            return await interaction.response.send_message("You need to be at least lvl 5 to use this command!", ephemeral=True)
+
+        cabin_options = [discord.SelectOption(label=cabin.name, value=str(cabin.id), emoji=cabin.icon) for cabin in cabins]
+
+        view = View(interaction.user.id)
+        cabin_select = Select(placeholder="Choose your cabin", options=cabin_options)
+        view.add_item(cabin_select)
+
+        embed = discord.Embed(title="Choose your cabin", description="You can only have one cabin at a time. If you want to change it, you can use this command again.")
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1027946252647809035/1028359231168057484/20221008_203016_0000.png")
+        await interaction.response.send_message("Choose your cabin", view=view)
+
+        await view.wait()
+
+        await view.disable(await interaction.original_response())
+
+        if view.timed_out:
+            return
+
+        cabin = self.guild.get_role(int(view.value))
+        # remove other roles if user has any
+        for role in interaction.user.roles:
+            if role.id in self.client.server_info.LEVEL_ROLES.values():
+                await interaction.user.remove_roles(role)
+
+        await interaction.user.add_roles(cabin)
+
+        await interaction.channel.send(f"You have been assigned the {cabin.name} role!")
 
 Cog = Roles
