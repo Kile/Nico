@@ -221,7 +221,7 @@ class Roles(commands.Cog):
 
         embed = discord.Embed(title="Choose your cabin", description="You can only have one cabin at a time. If you want to change it, you can use this command again.")
         embed.set_image(url="https://cdn.discordapp.com/attachments/1027946252647809035/1028359231168057484/20221008_203016_0000.png")
-        await interaction.response.send_message("Choose your cabin", view=view)
+        await interaction.response.send_message(embed=embed, view=view)
 
         await view.wait()
 
