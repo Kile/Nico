@@ -213,7 +213,7 @@ class Roles(commands.Cog):
         if not cabins:
             return await interaction.response.send_message("You need to be at least lvl 5 to use this command!", ephemeral=True)
 
-        cabin_options = [discord.SelectOption(label=cabin.name, value=str(cabin.id), emoji=cabin.icon) for cabin in cabins]
+        cabin_options = [discord.SelectOption(label=cabin.name, value=str(cabin.id)) for cabin in cabins]
 
         view = View(interaction.user.id)
         cabin_select = Select(placeholder="Choose your cabin", options=cabin_options)
