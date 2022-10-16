@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import discord
-from discord.ext import commands
 import datetime
 from inspect import iscoroutinefunction
 from .interactions import View

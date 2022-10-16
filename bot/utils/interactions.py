@@ -120,7 +120,7 @@ class PersistentVerificationView(discord.ui.View):
         self.add_item(button_deny)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        verifier_role = interaction.guild.get_role(ServerInfo.KITD.WELCOMER_ROLE if interaction.guild.id == ServerInfo.KITD.ID else ServerInfo.TEST.WELCOMER_ROLE) 
+        verifier_role = interaction.guild.get_role(ServerInfo.NSS.WELCOMER_ROLE if interaction.guild.id == ServerInfo.NSS.ID else ServerInfo.TEST.WELCOMER_ROLE) 
         if not (val := verifier_role in interaction.user.roles):
             await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
         return val
@@ -128,7 +128,7 @@ class PersistentVerificationView(discord.ui.View):
     async def verify_callback(self, interaction: discord.Interaction):
         applicant = interaction.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
 
-        role = interaction.guild.get_role(ServerInfo.KITD.VERIFIED_ROLE if interaction.guild.id == ServerInfo.KITD.ID else ServerInfo.TEST.VERIFIED_ROLE) 
+        role = interaction.guild.get_role(ServerInfo.NSS.VERIFIED_ROLE if interaction.guild.id == ServerInfo.NSS.ID else ServerInfo.TEST.VERIFIED_ROLE) 
         # Workaround for not being able to access wether it is a testing evironment or not
 
         await applicant.add_roles(role)

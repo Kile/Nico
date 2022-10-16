@@ -23,7 +23,7 @@ class Bot(commands.Bot):
         self.invite = "https://discord.com/oauth2/authorize?client_id=737723077978488973&scope=bot&permissions=8&applications.commands"
         self.is_dev = is_dev() # Checks if the bot is a dev bot
 
-        self.server_info = ServerInfo.TEST if self.is_dev else ServerInfo.KITD
+        self.server_info = ServerInfo.TEST if self.is_dev else ServerInfo.NSS
 
         self.session: aiohttp.ClientSession = None
 
@@ -57,7 +57,7 @@ async def main():
     # Create the bot instance.
     bot = Bot(
         command_prefix="Will " if is_dev() else "Nico ",
-        description="KITD's own discord bot",
+        description="Nico's Safe Space's own discord bot",
         intents=discord.Intents.all(),
         session=session
     )

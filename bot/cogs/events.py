@@ -174,7 +174,7 @@ class Events(commands.Cog):
             return
 
         if len(message.embeds) > 0 and ":thumbsup:" in message.embeds[0].description:
-            PotatoMember(message.author.id).add_potatoes(2)
+            PotatoMember(message.interaction.user).add_potatoes(2)
             await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They have been awarded a bonus of 2🥔")
 
     @commands.Cog.listener()

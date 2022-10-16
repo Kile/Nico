@@ -54,10 +54,10 @@ class Boosters(commands.Cog):
 
     @premium.command()
     @discord.app_commands.describe(image="The image to put the logo over", image_url="The url of the image to put the logo over")
-    async def logo(self, interaction: discord.Interaction, image: discord.Attachment = None, image_url: str = None):
-        """Gives you the logo of the server"""
+    async def old_logo(self, interaction: discord.Interaction, image: discord.Attachment = None, image_url: str = None):
+        """Put any image behind the old logo of the server"""
         if not self._intersect([r.id for r in interaction.user.roles], self.client.server_info.PREMIUM_ROLES) and not self.client.is_dev:
-            return await interaction.response.send_message("You must be a booster or patreon to use this command. [Patreon ling](https://patreon.com/kitd)")
+            return await interaction.response.send_message("You must be a booster or patreon to use this command. [Patreon link](https://patreon.com/kitd)")
 
         if not image and not image_url:
             return await interaction.response.send_message("You must provide an image to put the logo over")

@@ -300,7 +300,7 @@ class Event(commands.Cog):
         await self.client.tree.sync(guild=GUILD_OBJECT)
 
         await interaction.followup.send(embed=embed)
-        message = await interaction.original_message()
+        message = await interaction.original_response()
         await message.add_reaction("\U0001f389") # 🎉
 
 Cog = Event

@@ -4,6 +4,7 @@ from discord.ext import commands
 from typing import Optional, Any
 
 from bot.__init__ import Bot
+from bot.utils.functions import is_dev
 from bot.utils.interactions import View, Button, Select
 from bot.static.constants import Sexualities, Romantic, GUILD_OBJECT
 
@@ -208,12 +209,12 @@ class Roles(commands.Cog):
         if self.client.server_info.STAFF_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("Staff members can't have cabins since they're already in one!", ephemeral=True)
 
-        cabins = [self.guild.get_role(v) for k, v in self.client.server_info.LEVEL_ROLES.items() if self.guild.get_role(k) in interaction.user.roles]
+        cabins = [{"role": self.guild.get_role(v["id"]), "icon": v["icon"]} for k, v in self.client.server_info.LEVEL_ROLES.items() if self.guild.get_role(k) in interaction.user.roles]
 
         if not cabins:
             return await interaction.response.send_message("You need to be at least lvl 5 to use this command!", ephemeral=True)
 
-        cabin_options = [discord.SelectOption(label=cabin.name, value=str(cabin.id)) for cabin in cabins]
+        cabin_options = [discord.SelectOption(label=cabin["role"].name, value=str(cabin["role"].id), emoji=cabin["icon"]) for cabin in cabins]
 
         view = View(interaction.user.id)
         cabin_select = Select(placeholder="Choose your cabin", options=cabin_options)
@@ -221,6 +222,7 @@ class Roles(commands.Cog):
 
         embed = discord.Embed(title="Choose your cabin", description="You can only have one cabin at a time. If you want to change it, you can use this command again.")
         embed.set_image(url="https://cdn.discordapp.com/attachments/1027946252647809035/1028359231168057484/20221008_203016_0000.png")
+        embed.color = 0x2F3136
         await interaction.response.send_message(embed=embed, view=view)
 
         await view.wait()
@@ -238,6 +240,9 @@ class Roles(commands.Cog):
 
         await interaction.user.add_roles(cabin)
 
-        await interaction.channel.send(f"You have been assigned the {cabin.name} role!")
+        if self.client.is_dev:
+            await interaction.response.send_message(f"You have been assigned the {cabin.name} role!", ephemeral=True)
+        else:
+            await interaction.channel.send(f"Successfully joined the cabin of {cabin['role'].name.split('of')[1].strip()}!")
 
 Cog = Roles

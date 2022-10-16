@@ -70,7 +70,7 @@ class UntrustView(discord.ui.View):
             await interaction.response.send_message("You cannot vote on a vote you started!", ephemeral=True)
             return False
 
-        if not (ServerInfo.TEST.VERIFIED_ROLE if is_dev() else ServerInfo.KITD.VERIFIED_ROLE) in [r.id for r in interaction.user.roles]:
+        if not (ServerInfo.TEST.VERIFIED_ROLE if is_dev() else ServerInfo.NSS.VERIFIED_ROLE) in [r.id for r in interaction.user.roles]:
             await interaction.response.send_message("You need to have the verified role to vote!", ephemeral=True)
             return False
 

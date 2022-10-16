@@ -30,7 +30,7 @@ TRIALS = CONSTANTS.find_one({"_id": "trials"})["active"] if CONSTANTS.find_one({
 
 WELCOME_MESSAGE = \
 """ Welcome to Nico's Safe Space **{}**!
-I am Nico, KITD's own bot. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#711707649829240972>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about what is explained in those channels to ensure you have read them.
+I am Nico and I am watching over this server. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#711707649829240972>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about what is explained in those channels to ensure you have read them.
 
 Your answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
 
@@ -130,11 +130,11 @@ SERVER_QUESTIONS = [
     },
     {
         "question": "What is our bot channel?",
-        "answer": ["bot-fun", "bot fun", "#bot-fun", "#bot fun", "<#739525325267927082>", ":space_invader:bot-fun", ":space_invader:bot fun", "#:space_invader:bot-fun", "#👾bot-fun", "👾bot-fun", "👾bot fun", "#👾bot fun"]
+        "answer": ["training-area", "training area", "#training-area", "#trainin area", "<#739525325267927082>", ":target:training-area", ":target:training area", ]
     }
 ]
 
-class KITDServer:
+class NSSServer:
     ID = 710871326557995079
     
     APPLICATION_CHANNEL = 730811764652113960
@@ -166,11 +166,13 @@ class KITDServer:
     AUCTION_PING = 1015370996464767058
     STAFF_ROLE = 738317128930689055
     LEVEL_ROLES = {
-        813789401146327070: 1028767978516402296, # Level 10: Apollo
-        813789725722673154: 1028767931812823080, # Level 15: Aphrodite
-        813789854861230121: 1028767710680727592, # Level 20: Artemis
-        813790065654366228: 1028767667491971183, # Level 50: Hermes
-        997254017002512435: 1028767616564744252 # Level 100: Hera
+        813789401146327070: {"id": 1028767978516402296, "icon": "<:Apollo:1030894624979566612>"}, # Level 10: Apollo
+        813789725722673154: {"id": 1028767931812823080, "icon": "<:Aphrodite:1030895869232427058>"}, # Level 15: Aphrodite
+        813789854861230121: {"id": 1028767710680727592, "icon": "<:Artemis:1030894771872481412>"}, # Level 20: Artemis
+        813790065654366228: {"id": 1028767667491971183, "icon": "<:Hermes:1030894892265779220>"}, # Level 50: Hermes
+        997254017002512435: {"id": 1028767616564744252, "icon": "<:Hera:1030894855972470916>"}, # Level 100: Hera
+        712375696642801854: {"id": 1029665470179188746, "icon": "<:Soteria:1030894946883993755>"}, # will help role: Soteria
+        756512273001873458: {"id": 1029665250380873728, "icon": "<:Plutus:1030894925828599859>"} # giveaway role: Plutus
     }
 
 """
@@ -214,16 +216,16 @@ class TestServer:
     AUCTION_PING = 1015370148615561348
     STAFF_ROLE = 1
     LEVEL_ROLES = {
-        1027946396801843252: 1027946473398218752,
-        1027946442431672412: 1027946539508846653
+        1027946396801843252: {"id": 1027946473398218752, "icon": "<:IronMan:1030896994891337838>"}, # Iron man
+        1027946442431672412: {"id": 1027946539508846653, "icon": "<:DoctorStrange:1030897207953608826>"} # Dr Strange
     }
 
 class ServerInfo:
-    KITD = KITDServer
+    NSS = NSSServer
     TEST = TestServer
 
 
-GUILD_OBJECT = discord.Object(id=(ServerInfo.TEST.ID if is_dev() else ServerInfo.KITD.ID))
+GUILD_OBJECT = discord.Object(id=(ServerInfo.TEST.ID if is_dev() else ServerInfo.NSS.ID))
 
 class Sexualities(Enum):
     straight = "804873516713377853"
