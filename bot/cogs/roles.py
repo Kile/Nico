@@ -235,7 +235,7 @@ class Roles(commands.Cog):
         cabin = self.guild.get_role(int(view.value))
         # remove other roles if user has any
         for role in interaction.user.roles:
-            if role.id in self.client.server_info.LEVEL_ROLES.values():
+            if role.id in [r["id"] for r in self.client.server_info.LEVEL_ROLES.values()]:
                 await interaction.user.remove_roles(role)
 
         await interaction.user.add_roles(cabin)
