@@ -48,6 +48,7 @@ class Roles(commands.Cog):
         Choice(name="chat revive", value="1011764789128744970"),
         Choice(name="motivation pings", value="1013813519365451900"),
         Choice(name="auction ping", value="1015370996464767058"),
+        Choice(name="adventure ping", value="1038866710087872522")
     ]
 
     def __init__(self, client: Bot):
