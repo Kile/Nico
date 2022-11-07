@@ -78,7 +78,7 @@ class Join(commands.Cog):
         return self.guild.get_channel(self.client.server_info.GENERAL_CHANNEL)
 
     @commands.Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member: discord.Member):
         if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
 
         await self.client._change_presence()

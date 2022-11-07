@@ -37,7 +37,7 @@ Your answers will be automatically checked, so make sure you write short answers
 Please also make sure to open your dms to Nico before running the `/join` command, else he will not be able to respond.
 
 New to discord? Not sure what to do? Something isn't working? Need help?
-Check out [__this__](https://youtu.be/x90ZzL5x84c) youtube video for a detailed showcase of how to fully join this server.
+Check out these youtube videos for a detailed showcase of how to fully join this server: [Mobile](https://youtu.be/5aIx2ETB3r4) [Desktop](https://youtu.be/57RNJyFa24k)
 If you still have trouble feel free to dm a staff member at any point to ask for help.
 """
 

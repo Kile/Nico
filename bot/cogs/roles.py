@@ -234,6 +234,11 @@ class Roles(commands.Cog):
             return
 
         cabin = self.guild.get_role(int(view.value))
+
+        if cabin in interaction.user.roles:
+            await interaction.user.remove_roles(cabin)
+            return await view.interaction.response.send_message(f"You have left the {cabin.name} cabin!", ephemeral=True)
+            
         # remove other roles if user has any
         for role in interaction.user.roles:
             if role.id in [r["id"] for r in self.client.server_info.LEVEL_ROLES.values()]:
