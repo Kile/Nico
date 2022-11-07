@@ -134,7 +134,7 @@ class PersistentVerificationView(discord.ui.View):
         await applicant.add_roles(role)
         await interaction.response.send_message(f"✅ Verified {applicant.mention}", ephemeral=True)
         try:
-            await applicant.send(f"Your application in Kids In The Dark has been approved and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
+            await applicant.send(f"Your application in Nico's Safe Space has been approved and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
         except discord.HTTPException:
             pass # Ignore closed dms
 
@@ -163,7 +163,7 @@ class PersistentVerificationView(discord.ui.View):
         await interaction.response.send_message(f"✅ Denied {applicant.mention}", ephemeral=True)
 
         try:
-            await applicant.send(f"Your application in Kids In The Dark has been denied. If you think this is a mistake, please contact a staff member.")
+            await applicant.send(f"Your application in Nico's Safe Space has been denied. If you think this is a mistake, please contact a staff member.")
         except discord.HTTPException:
             pass
 

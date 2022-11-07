@@ -107,7 +107,7 @@ class Join(commands.Cog):
 
     @discord.app_commands.command()
     async def join(self, interaction: discord.Interaction):
-        """Answer a few questions to gain access to Kids In The Dark"""
+        """Answer a few questions to gain access to Nico's Safe Space"""
 
         if interaction.guild:
             return await interaction.response.send_message("You can't use this command in a server", ephemeral=True)
