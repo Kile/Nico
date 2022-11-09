@@ -164,7 +164,7 @@ class Events(commands.Cog):
 
                 await view.disable(msg)
 
-        if randint(1, 1000) == 1 and message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and not message.author.bot and not PotatoMember.potato: # 0.01% Chance of potato dropping
+        if randint(1, 200) == 1 and message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and not message.author.bot and not PotatoMember.potato: # 0.01% Chance of potato dropping
             PotatoMember.potato = await message.channel.send(":potato:")
 
         if PotatoMember.potato and message.content in [":potato:", "🥔", "\U0001f954"] and PotatoMember.potato.channel.id == message.channel.id and message.author.id != PotatoMember.potato.author.id:
