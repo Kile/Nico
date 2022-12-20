@@ -22,6 +22,8 @@ POTATO = DB["potato"]
 
 DISBOARD = 302050872383242240
 
+DAILY_POTATOES = 3
+
 CREATE_ROLE_WITH_COLOUR = False # Wether users can create their custom roles with a custom colour or not
 
 ACTIVITY_EVENT = CONSTANTS.find_one({"_id": "activity_event"})["active"]

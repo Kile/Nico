@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 
 from bot.__init__ import Bot
 from bot.utils.classes import PotatoMember as Member, Auction, AuctionItem, PerkType
-from bot.static.constants import GUILD_OBJECT, CREATE_ROLE_WITH_COLOUR
+from bot.static.constants import GUILD_OBJECT, CREATE_ROLE_WITH_COLOUR, DAILY_POTATOES
 from bot.utils.paginator import Paginator
 from bot.utils.interactions import Modal, View, Select, Button
 from bot.utils.timeconverter import TimeConverter
@@ -262,6 +262,11 @@ class Potato(commands.Cog):
 
     def __init__(self, client: Bot):
         self.client = client
+        self.premium_perks = { # Reuducing cost or increasing bonus of potatoes
+            998348150316208244: 1.5,
+            998347219126202472: 1.3,
+            998346693965779018: 1.1,
+        }
 
     potato = discord.app_commands.Group(name="potato", description="Potato commands", guild_ids=[GUILD_OBJECT.id])
     auctions = discord.app_commands.Group(name="auctions", description="Auction off your items or get them from other people", guild_ids=[GUILD_OBJECT.id], parent=potato)
@@ -278,6 +283,9 @@ class Potato(commands.Cog):
     async def on_ready(self):
         await self.client.wait_until_ready()
         self.auction_loop.start()
+
+    def _intersect(self, list1: list, list2: list) -> bool:
+        return set(list1).intersection(set(list2))
 
     @tasks.loop(minutes=1)
     async def auction_loop(self) -> None:
@@ -358,10 +366,22 @@ class Potato(commands.Cog):
             return await interaction.response.send_message(f"You can't gamble less than 1 potato")
 
         if randint(0, 100) < 50:
+            if role_id := self._intersect([r.id for r in interaction.user.roles], list(self.premium_perks.keys())):
+                bonus = int((self.premium_perks[role_id[0]] - 1) * amount)
+            elif interaction.user in interaction.guild.premium_subscribers:
+                bonus = int(0.3 * amount)
+            else: 
+                bonus = None
+                bonustext = ""
+
             member.add_potatoes(amount)
+            if bonus:
+                bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
+                member.add_potatoes(bonus)
+
             embed = discord.Embed.from_dict({
                 "title": ":game_die: :potato: :game_die:",
-                "description": f"Your gambling paid off, you won {amount} potato{'es' if amount > 1 else ''} giving you a total of {member.potatoes} potatoes\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)),
+                "description": f"Your gambling paid off, you won {amount} potato{'es' if amount > 1 else ''}{bonustext} giving you a total of {member.potatoes} potatoes\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)),
                 "color": 0x2f3136,
             })
         else:
@@ -486,9 +506,22 @@ class Potato(commands.Cog):
         if member.has_valid_cooldown("daily", hours=24):
             return await interaction.response.send_message(f"You can't get daily potatoes yet, you can claim them <t:{int((member.cooldowns['daily'] + timedelta(hours=24)).timestamp())}:R>")
 
-        member.add_potatoes(3)
+        if role_id := self._intersect([r.id for r in interaction.user.roles], list(self.premium_perks.keys())):
+            bonus = int((self.premium_perks[role_id[0]] - 1) * DAILY_POTATOES)
+        elif interaction.user in interaction.guild.premium_subscribers:
+            bonus = int(0.3 * DAILY_POTATOES)
+        else:
+            bonus = None
+            bonustext = ""
+
+        member.add_potatoes(DAILY_POTATOES)
+        if bonus:
+            bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
+            member.add_potatoes(bonus)
+
+        member.add_potatoes(DAILY_POTATOES)
         member.add_cooldown("daily")
-        await interaction.response.send_message(content=f"You claimed your daily 3 potatoes :potato:, and now hold onto {member.potatoes} potatos")
+        await interaction.response.send_message(content=f"You claimed your daily {DAILY_POTATOES} potatoes{bonustext} :potato:, and now hold onto {member.potatoes} potatos")
 
     @potato.command()
     async def redeem(self, interaction: discord.Interaction, item: Literal["Custom emoji", "Custom role", "Custom sticker"]):

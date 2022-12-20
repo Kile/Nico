@@ -62,7 +62,13 @@ class Events(commands.Cog):
 
         if datetime.now() - self.startup < timedelta(minutes=5): # I don't want the banner to be sent when I start the bot
             return
-
+        # Find if an attachment named "water.png" has been sent within the last 20 messages
+        async for message in self.general_channel.history(limit=20):
+            if message.attachments and message.author == self.client.user:
+                for attachment in message.attachments:
+                    if attachment.filename == "water.png":
+                        return
+                        
         await self.general_channel.send(file=discord.File(filename="water.png", fp=BytesIO(self.water_banner)))
 
     @water.before_loop
