@@ -249,6 +249,6 @@ class Roles(commands.Cog):
         if self.client.is_dev:
             await interaction.response.send_message(f"You have been assigned the {cabin.name} role!", ephemeral=True)
         else:
-            await interaction.channel.send(f"Successfully joined the cabin of {cabin['role'].name.split('of')[1].strip()}!")
+            await interaction.channel.send(f"Successfully joined the cabin of {cabin.name.split('of')[1].strip()}!")
 
 Cog = Roles
