@@ -506,13 +506,14 @@ class Potato(commands.Cog):
         if member.has_valid_cooldown("daily", hours=24):
             return await interaction.response.send_message(f"You can't get daily potatoes yet, you can claim them <t:{int((member.cooldowns['daily'] + timedelta(hours=24)).timestamp())}:R>")
 
+        bonustext = ""
+        
         if role_id := self._intersect([r.id for r in interaction.user.roles], list(self.premium_perks.keys())):
             bonus = int((self.premium_perks[role_id[0]] - 1) * DAILY_POTATOES)
         elif interaction.user in interaction.guild.premium_subscribers:
             bonus = int(0.3 * DAILY_POTATOES)
         else:
             bonus = None
-            bonustext = ""
 
         member.add_potatoes(DAILY_POTATOES)
         if bonus:
