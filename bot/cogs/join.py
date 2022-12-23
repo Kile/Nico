@@ -99,7 +99,7 @@ class Join(commands.Cog):
         view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
 
-        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member}** just joined! They cannot see this channel yet, instead press the welcome button to welcome them!", view=view)
+        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member}** just joined! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
 
         await view.wait()
 
@@ -140,7 +140,7 @@ class Join(commands.Cog):
             return await modal.interaction.response.send_message(f"Sadly your answer{'s' if len(incorrect) > 1 else ''} to question{'s' if len(incorrect) > 1 else ''} {text} {'is' if len(incorrect) > 1 else 'are'} incorrect! Please try again.")
 
         await member.remove_roles(self.new_role)
-        await modal.interaction.response.send_message("Congratulations! You have answered all questions correctly! You have been given access to the server!")
+        await modal.interaction.response.send_message("Congratulations! You have answered all questions correctly! You have been given full access to the server!")
         await self.general_channel.send(f"{member.mention} has been granted full access to the server!")
 
 Cog = Join
