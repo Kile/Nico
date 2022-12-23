@@ -49,6 +49,9 @@ class Application(commands.Cog):
         if self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("You are already verified!", ephemeral=True)
 
+        if self.client.server_info.NEW_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You cannot apply to be verified without first gaining full access to the server with `/join`!", ephemeral=True)
+
         if not CONSTANTS.find_one({"_id": "pending_applications"}):
             CONSTANTS.insert_one({"_id": "pending_applications", "ids": []})
         elif not CONSTANTS.find_one({"_id": "denied"}):

@@ -34,6 +34,8 @@ class Trials(commands.Cog):
     @discord.app_commands.guilds(GUILD_OBJECT)
     async def trials(self, interaction: discord.Interaction):
         """Apply for trials with this command"""
+        if self.client.server_info.NEW_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You cannot apply for a trial position gaining full access to the server with `/join`!", ephemeral=True)
     
         modal = TrialsModal(interaction.user.id)
         await interaction.response.send_modal(modal)

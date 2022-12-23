@@ -147,6 +147,9 @@ class Roles(commands.Cog):
     @discord.app_commands.describe(role="The role you want to assign yourself")
     async def other(self, interaction: discord.Interaction, role: Choice[str]):
         """Choose one of the various interets roles"""
+        if self.client.server_info.NEW_ROLE in [r.id for r in interaction.user.roles]:
+            return await interaction.response.send_message("You need to first gain full access to the server with `/join` before being able to pick any of these roles!", ephemeral=True)
+
         if int(role.value) in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_roles(self.guild.get_role(int(role.value)))
             # This means the user wants to remove the role
