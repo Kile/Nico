@@ -31,7 +31,7 @@ class Feedback(commands.Cog):
     async def feedback(self, interaction: discord.Interaction):
         """Submit feedback about the server with this command"""
     
-        modal = Modal()
+        modal = Modal("Your feedback")
         _feedback = discord.ui.TextInput(label="Feedback", placeholder="I think that the server needs.../I like that the server has...", required=True, max_length=4000, min_length=20, style=discord.TextStyle.long)
         modal.add_item(_feedback)
 

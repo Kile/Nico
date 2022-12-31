@@ -96,7 +96,7 @@ class Owner(commands.Cog):
             return await view.disable(await interaction.original_response())
 
         if view.value == "content":
-            modal = Modal()
+            modal = Modal("Edit message content")
             content = discord.ui.TextInput(label="Content", default=message.content, required=False, max_length=4000, style=discord.TextStyle.long)
             await view.interaction.response.send_modal(modal)
 
@@ -165,7 +165,7 @@ class Owner(commands.Cog):
         if not interaction.user.id == self.guild.owner_id:
             return await interaction.response.send_message("You must be the server owner to use this command", ephemeral=True)
 
-        modal = Modal()
+        modal = Modal(title="Submit an update")
         text = discord.ui.TextInput(label="What's new?", placeholder="Made Nico event better (although impossible)", required=True, max_length=4000, style=discord.TextStyle.long)
         modal.add_item(text)
 
