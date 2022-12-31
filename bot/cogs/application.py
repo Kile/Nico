@@ -9,8 +9,8 @@ from bot.static.constants import CONSTANTS, QUESTIONS, GUILD_OBJECT
 
 class ApplicationModal(Modal):
 
-    def __init__(self, user_id: int, page: int):
-        super().__init__(user_id, title="Application")
+    def __init__(self, page: int):
+        super().__init__(title="Application")
         if page == 1:
             questions = QUESTIONS[:5]
         elif page == 2:
@@ -65,7 +65,7 @@ class Application(commands.Cog):
         answers = []
 
         for i in range(1, 4):
-            modal = ApplicationModal(interaction.user.id, i)
+            modal = ApplicationModal(i)
             await interaction.response.send_modal(modal)
             await modal.wait()
 

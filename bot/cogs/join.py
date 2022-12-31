@@ -9,8 +9,8 @@ from bot.static.constants import WELCOME_MESSAGE, SERVER_QUESTIONS
 
 class JoinModal(Modal):
 
-    def __init__(self, user_id: int):
-        super().__init__(user_id, title="Join questions")
+    def __init__(self):
+        super().__init__(title="Join questions")
 
         # Get a list of 3 random items from SERVER_QUESTIONS, so the questions are different every time
         self.questions = sample(SERVER_QUESTIONS, 3)
@@ -120,7 +120,7 @@ class Join(commands.Cog):
         if not self.new_role in member.roles:
             return await interaction.response.send_message("You already have access to the server!", ephemeral=True)
 
-        modal = JoinModal(interaction.user.id)
+        modal = JoinModal()
 
         await interaction.response.send_modal(modal)
 

@@ -9,30 +9,16 @@ from bot.cogs.trials import Trials
 from bot.static.constants import GUILD_OBJECT, CONSTANTS, TRIALS
 from bot.utils.interactions import Modal, View, Button
 
-class UpdateModal(Modal):
-
-    def __init__(self, user_id: int):
-        super().__init__(user_id, title="Update")
-        self.add_item(discord.ui.TextInput(label="What's new?", placeholder="Made Nico event better (although impossible)", required=True, max_length=4000, style=discord.TextStyle.long))
-
-
 class EmbedModal(Modal):
 
-    def __init__(self, user_id: int, current_embed: discord.Embed):
-        super().__init__(user_id, title="Embed editing menu")
+    def __init__(self, current_embed: discord.Embed):
+        super().__init__(title="Embed editing menu")
 
         self.add_item(discord.ui.TextInput(label="Title", default=current_embed.title, required=False, max_length=256, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Description", default=current_embed.description, required=False, max_length=4000, style=discord.TextStyle.long))
         self.add_item(discord.ui.TextInput(label="Image url", default=current_embed.image.url if current_embed.image else None, required=False, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Colour", default=str(current_embed.colour) if current_embed.colour else None, required=False, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Footer", default=current_embed.footer.text if current_embed.footer else None, required=False, style=discord.TextStyle.short))
-
-class ContentModal(Modal):
-    
-        def __init__(self, user_id: int, current_content: str):
-            super().__init__(user_id, title="Message editing menu")
-    
-            self.add_item(discord.ui.TextInput(label="Content", default=current_content, required=False, max_length=4000, style=discord.TextStyle.long))
 
 class Owner(commands.Cog):
 
@@ -62,7 +48,7 @@ class Owner(commands.Cog):
 
     async def _new_embed(self, old_embed: discord.Embed, interaction: discord.Interaction) -> Union[Tuple[discord.Embed, discord.Interaction], None]:
 
-        modal = EmbedModal(interaction.user.id, old_embed)
+        modal = EmbedModal(old_embed)
         await interaction.response.send_modal(modal)
 
         await modal.wait()
@@ -110,7 +96,8 @@ class Owner(commands.Cog):
             return await view.disable(await interaction.original_response())
 
         if view.value == "content":
-            modal = ContentModal(interaction.user.id, message.content)
+            modal = Modal()
+            content = discord.ui.TextInput(label="Content", default=message.content, required=False, max_length=4000, style=discord.TextStyle.long)
             await view.interaction.response.send_modal(modal)
 
             await modal.wait()
@@ -118,7 +105,7 @@ class Owner(commands.Cog):
             if modal.timed_out:
                 return
 
-            await message.edit(content=modal.values[0])
+            await message.edit(content=content)
             await modal.interaction.response.send_message(":thumbsup: Content updated", ephemeral=True)
 
         elif view.value.isdigit():
@@ -178,14 +165,17 @@ class Owner(commands.Cog):
         if not interaction.user.id == self.guild.owner_id:
             return await interaction.response.send_message("You must be the server owner to use this command", ephemeral=True)
 
-        modal = UpdateModal(interaction.user.id)
+        modal = Modal()
+        text = discord.ui.TextInput(label="What's new?", placeholder="Made Nico event better (although impossible)", required=True, max_length=4000, style=discord.TextStyle.long)
+        modal.add_item(text)
+
         await interaction.response.send_modal(modal)
+
         await modal.wait()
 
-        update = modal.children[0].value
         embed = discord.Embed.from_dict({
             "title": "**New Nico update**",
-            "description": update,
+            "description": text,
             "color": 0xfbafaf,
             "image": {
                 "url": self.update_banner_url

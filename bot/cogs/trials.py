@@ -7,8 +7,8 @@ from bot.static.constants import GUILD_OBJECT
 
 class TrialsModal(Modal):
 
-    def __init__(self, user_id: int):
-        super().__init__(user_id, title="Trial Application form")
+    def __init__(self):
+        super().__init__(title="Trial Application form")
         
         self.add_item(discord.ui.TextInput(label="What position do you want to trial for?", placeholder="Moderator/Server Manager/Both", style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="How often are you on discord?", placeholder="1h a day/whenever I can/on weekends/...", style=discord.TextStyle.short))
@@ -37,7 +37,7 @@ class Trials(commands.Cog):
         if self.client.server_info.NEW_ROLE in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("You cannot apply for a trial position gaining full access to the server with `/join`!", ephemeral=True)
     
-        modal = TrialsModal(interaction.user.id)
+        modal = TrialsModal()
         await interaction.response.send_modal(modal)
         await modal.wait()
     

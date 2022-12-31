@@ -42,34 +42,14 @@ class View(discord.ui.View):
 
 class Modal(discord.ui.Modal):
     """A modal for various usages"""
-    def __init__(self, user_id: Union[int, List[int]], **kwargs):
-        super().__init__(**kwargs)
-        self.user_id = user_id
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.values = []
         self.timed_out = False
         self.interaction = None
 
     async def on_timeout(self) -> None:
         self.timed_out = True
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if isinstance(self.user_id, int):
-            if not (val := interaction.user.id == self.user_id):
-                await interaction.response.defer()
-        else:
-            if not (val := (interaction.user.id in self.user_id)):
-                await interaction.response.defer()
-        return val
-
-    async def disable(self, msg: discord.Message) -> Union[discord.Message, None]:
-        """"Disables the children inside of the view"""
-        if not [c for c in self.children if not c.disabled]: # if every child is already disabled, we don't need to edit the message again
-            return
-
-        for c in self.children:
-            c.disabled = True
-
-        await msg.edit(view=self)
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         """Called when the modal is submitted"""

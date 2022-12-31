@@ -17,8 +17,8 @@ from bot.utils.timeconverter import TimeConverter
 
 class CreateRoleModal(Modal):
 
-    def __init__(self, user_id: int, colour: bool):
-        super().__init__(user_id=user_id, title="Create custom Role")
+    def __init__(self, colour: bool):
+        super().__init__(title="Create custom Role")
         self.add_item(discord.ui.TextInput(label="Role name", placeholder="Role name", required=True, max_length=32, min_length=2, style=discord.TextStyle.short))
         self.add_item(discord.ui.TextInput(label="Role icon", placeholder="https://images.com/some_image.jpeg", required=False, max_length=256, min_length=2, style=discord.TextStyle.short))
 
@@ -50,7 +50,7 @@ class CreateAuctionView(View):
         default: str = None
     ) -> Tuple[str, discord.Interaction]:
 
-        modal = Modal(interaction.user.id, title=title)
+        modal = Modal(title=title)
         modal.add_item(discord.ui.TextInput(label=label, placeholder=placeholder, required=True, max_length=max_length, style=style, default=default))
 
         await interaction.response.send_modal(modal)
@@ -539,7 +539,7 @@ class Potato(commands.Cog):
             return await interaction.response.send_message(f"You do not have any {item}s to redeem!")
 
         if item == "Custom emoji":
-            modal = Modal(interaction.user.id, title="Emoji creator")
+            modal = Modal(title="Emoji creator")
             modal.add_item(discord.ui.TextInput(label="Emoji name", placeholder="Emoji_name", required=True, max_length=25))
             modal.add_item(discord.ui.TextInput(label="Emoji URL", placeholder="https://example.com/emoji.png", required=True, max_length=255))
 
@@ -571,7 +571,7 @@ class Potato(commands.Cog):
             return await modal.interaction.followup.send(f"You created the emoji {emoji}!")
 
         elif item == "Custom role":
-            modal = CreateRoleModal(interaction.user.id, colour = CREATE_ROLE_WITH_COLOUR)
+            modal = CreateRoleModal(colour = CREATE_ROLE_WITH_COLOUR)
 
             await interaction.response.send_modal(modal)
 
@@ -612,7 +612,7 @@ class Potato(commands.Cog):
             return await modal.interaction.followup.send(f"You created the role {role.name}!")
 
         elif item == "Custom sticker":
-            modal = Modal(interaction.user.id, title="Sticker creator")
+            modal = Modal(title="Sticker creator")
             modal.add_item(discord.ui.TextInput(label="Sticker URL", placeholder="https://example.com/sticker.png", required=True, max_length=255))
             modal.add_item(discord.ui.TextInput(label="Sticker name", placeholder="Sticker name", required=True, max_length=25))
             modal.add_item(discord.ui.TextInput(label="Sticker description", placeholder="Sticker description", required=True, max_length=255))
