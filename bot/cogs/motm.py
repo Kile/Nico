@@ -70,7 +70,7 @@ class MemberOfTheMonth(commands.Cog):
             return await interaction.response.send_message(f"You have already voted for {n}/{MOTM_VOTE_LIMIT} members this month!", ephemeral=True)
 
         # Check if a motm has already been chosen this month
-        if (_data := CONSTANTS.find_one({"_id": "motm"})) and (_date := datetime.fromisoformat(_data["date"])).month == datetime.now().month and _date.year == datetime.now().year:
+        if (_data := CONSTANTS.find_one({"_id": "motm"})) and (_date := datetime.fromisoformat(_data["winners"][-1]["date"])).month == datetime.now().month and _date.year == datetime.now().year:
             return await interaction.response.send_message("A member of the month has already been chosen this month!", ephemeral=True)
 
         if member == interaction.user:
