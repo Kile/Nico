@@ -30,8 +30,16 @@ class Seasonal(commands.Cog):
     async def valentine(self, interaction: discord.Interaction, other: discord.Member):
         """Send a valentine to another member in the server"""
 
+        if self.client.server_info.NEW_ROLE in interaction.user.roles:
+            return await interaction.response.send_message("You are not allowed to send valentines yet. You need to complete initial verification with `/join` for that.", ephemeral=True)
+
         if other == interaction.user:
             return await interaction.response.send_message("Hey... I am sure *someone* will send you a valentine! You don't have to do it yourself. Just give it a bit :3", ephemeral=True)
+
+        encrypted = self.number_to_base(interaction.user.id)
+        async for message in self.val_channel.history(limit=100):
+            if encrypted == message.components[0].custom_id and message.mentions[0] == other:
+                return await interaction.response.send_message("You have already sent a valentine to this person!", ephemeral=True)
 
         # Create a modal to enter the valentine message
         modal = Modal(title="Valentine")
@@ -48,9 +56,8 @@ class Seasonal(commands.Cog):
         # Check if the user wants to show their name
         show = show.value.lower() == "y" if show.value else False
 
-        encrypted_author = self.number_to_base(interaction.user.id)
         view = discord.ui.View()
-        button = discord.ui.Button(label="Send with ❤️", style=discord.ButtonStyle.red, disabled=True, custom_id=encrypted_author)
+        button = discord.ui.Button(label="Send with ❤️", style=discord.ButtonStyle.red, disabled=True, custom_id=encrypted)
         view.add_item(button)
 
         embed = discord.Embed.from_dict({
