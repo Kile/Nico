@@ -5,7 +5,7 @@ from enum import Enum, auto
 from datetime import datetime, timedelta
 from typing import Dict, Union, List, Tuple
 
-from bot.static.constants import EVENT, POTATO, CONSTANTS, HELLO_AGAIN
+from bot.static.constants import EVENT, POTATO, CONSTANTS
 
 class HelloAgain:
     cache: "HelloAgain" = None
