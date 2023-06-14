@@ -6,6 +6,7 @@ from random import sample
 from bot.__init__ import Bot
 from bot.utils.interactions import Modal, View, Button
 from bot.static.constants import WELCOME_MESSAGE, SERVER_QUESTIONS
+from bot.utils.classes import HelloAgain
 
 class JoinModal(Modal):
 
@@ -72,6 +73,10 @@ class Join(commands.Cog):
     @property
     def new_role(self) -> discord.Role:
         return self.guild.get_role(self.client.server_info.NEW_ROLE)
+    
+    @property
+    def member_role(self) -> discord.Role:
+        return self.guild.get_role(self.client.server_info.MEMBER_ROLE)
 
     @property
     def general_channel(self) -> discord.TextChannel:
@@ -84,7 +89,12 @@ class Join(commands.Cog):
         await self.client._change_presence()
         if member.bot: return
 
+        HelloAgain().add_user(member.id)
         await member.add_roles(self.new_role)
+        try:
+            member.add_roles(self.member_role)
+        except Exception: # Role may already be added (multiple bots try to add it)
+            pass
 
         embed = discord.Embed.from_dict({
             "title": "Welcome to the server!",

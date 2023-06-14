@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 
 from bot.__init__ import Bot
 from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO
-from bot.utils.classes import Member, PotatoMember
+from bot.utils.classes import Member, PotatoMember, HelloAgain
 from bot.utils.interactions import View, Button
 
 from io import BytesIO
@@ -50,6 +50,24 @@ class Events(commands.Cog):
         self.remove_sos_role.start()
         self.water.start()
         print("Loaded events cog")
+
+    @tasks.loop(hours=12)
+    async def hello_again(self):
+        """Sends a reminder the server exists if the user has not interacted in it a week after joining"""
+        hello_again_obj = HelloAgain()
+        members = hello_again_obj.needs_hello_again()
+
+        for member in members:
+            m = self.guild.get_member(member)
+            embed = discord.Embed.from_dict({
+                "title": "Hello again!",
+                "description": f"Hey {m.mention}, you haven't talked a lot since you joined in Nico's Safe Space! Don't be shy, we'd love to hear more from you! Say hi in <#{self.client.server_info.GENERAL_CHANNEL}>!",
+                "color": 0x2f3136
+            })
+            try:
+                await m.send(embed=embed)
+            except discord.Forbidden: # dms closed
+                pass
 
     @tasks.loop(hours=2)
     async def water(self):
@@ -146,6 +164,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.guild != self.guild: return
+        HelloAgain().add_message(message.author.id)
 
         if ACTIVITY_EVENT and not message.author.bot:
             self.handle_score(message)
@@ -195,6 +214,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         if member.guild != self.guild: return
+        HelloAgain().remove_user(member.id)
 
         await self.client._change_presence()
         if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):

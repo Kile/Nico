@@ -5,7 +5,54 @@ from enum import Enum, auto
 from datetime import datetime, timedelta
 from typing import Dict, Union, List, Tuple
 
-from bot.static.constants import EVENT, POTATO, CONSTANTS
+from bot.static.constants import EVENT, POTATO, CONSTANTS, HELLO_AGAIN
+
+class HelloAgain:
+    cache: "HelloAgain" = None
+
+    def __new__(cls):
+        if cls.cache:
+            return cls.cache
+        return super().__new__(cls)
+
+    def __init__(self):
+        if self.cache:
+            return 
+        
+        self.list: Dict[int, Dict[str, Union[int, datetime]]] = CONSTANTS.find_one({"_id": "hello_again"})["list"]
+
+        self.cache = self
+
+    def add_user(self, user_id: int):
+        """Adds a user to the list"""
+        if user_id in self.list:
+            return 
+        self.list[user_id] = {"time": datetime.now(), "count": 0}
+        CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
+
+    def remove_user(self, user_id: int):
+        """Removes a user from the list"""
+        if user_id not in self.list:
+            return 
+        del self.list[user_id]
+        CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
+
+    def add_message(self, user_id: int):
+        """Adds a message to the user's count"""
+        if user_id not in self.list:
+            return 
+        self.list[user_id]["count"] += 1
+        if self.list[user_id]["count"] >= 10:
+            del self.list[user_id]
+        CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
+
+    def needs_hello_again(self) -> List[int]:
+        """Returns a list of user ids that need to be greeted again because the time is more than a week ago"""
+        users = [user_id for user_id, val in self.list.items() if datetime.now() - val["time"] > timedelta(days=7)]
+        for user in users:
+            del self.list[user]
+        CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
+        return users
 
 class Member:
     cache: Dict[int, "Member"] = {}
