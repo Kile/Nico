@@ -27,32 +27,32 @@ class HelloAgain:
         """Adds a user to the list"""
         if user_id in self.list:
             return 
-        self.list[user_id] = {"time": datetime.now(), "count": 0}
+        self.list[str(user_id)] = {"time": datetime.now(), "count": 0}
         CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
 
     def remove_user(self, user_id: int):
         """Removes a user from the list"""
         if user_id not in self.list:
             return 
-        del self.list[user_id]
+        del self.list[str(user_id)]
         CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
 
     def add_message(self, user_id: int):
         """Adds a message to the user's count"""
         if user_id not in self.list:
             return 
-        self.list[user_id]["count"] += 1
-        if self.list[user_id]["count"] >= 10:
-            del self.list[user_id]
+        self.list[str(user_id)]["count"] += 1
+        if self.list[str(user_id)]["count"] >= 10:
+            del self.list[str(user_id)]
         CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
 
     def needs_hello_again(self) -> List[int]:
         """Returns a list of user ids that need to be greeted again because the time is more than a week ago"""
         users = [user_id for user_id, val in self.list.items() if datetime.now() - val["time"] > timedelta(days=7)]
         for user in users:
-            del self.list[user]
+            del self.list[str(user)]
         CONSTANTS.update_one({"_id": "hello_again"}, {"$set": {"list": self.list}})
-        return users
+        return [int(u) for u in users]
 
 class Member:
     cache: Dict[int, "Member"] = {}
