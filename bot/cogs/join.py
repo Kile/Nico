@@ -92,7 +92,7 @@ class Join(commands.Cog):
         HelloAgain().add_user(member.id)
         await member.add_roles(self.new_role)
         try:
-            member.add_roles(self.member_role)
+            await member.add_roles(self.member_role)
         except Exception: # Role may already be added (multiple bots try to add it)
             pass
 
