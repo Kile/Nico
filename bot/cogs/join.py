@@ -104,12 +104,12 @@ class Join(commands.Cog):
                 "text": "Joined at " + member.joined_at.strftime("%H:%M:%S on %d/%m/%Y")
             }
         })
-        message = await self.welcome_channel.send(content=member.mention + " <@&" + self.client.server_info.WELCOMER_ROLE + ">", embed=embed)
+        message = await self.welcome_channel.send(content=member.mention, embed=embed)
 
         view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
 
-        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member}** just joined! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
+        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
 
         await view.wait()
 
