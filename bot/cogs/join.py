@@ -104,7 +104,7 @@ class Join(commands.Cog):
                 "text": "Joined at " + member.joined_at.strftime("%H:%M:%S on %d/%m/%Y")
             }
         })
-        message = await self.welcome_channel.send(content=member.mention, embed=embed)
+        message = await self.welcome_channel.send(content=member.mention + " <@&" + self.client.server_info.WELCOMER_ROLE + ">", embed=embed)
 
         view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
