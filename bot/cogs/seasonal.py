@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from bot.__init__ import Bot
 from bot.utils.interactions import Modal
+from datetime import timedelta
 
 class Seasonal(commands.Cog):
     """A number of commands for events such as Valentines day"""
@@ -37,7 +38,7 @@ class Seasonal(commands.Cog):
             return await interaction.response.send_message("Hey... I am sure *someone* will send you a valentine! You don't have to do it yourself. Just give it a bit :3", ephemeral=True)
 
         encrypted = self.number_to_base(interaction.user.id)
-        async for message in self.val_channel.history(limit=100):
+        async for message in self.val_channel.history(limit=100, after=discord.utils.utcnow() - timedelta(weeks=4)):
             if encrypted == message.components[0].children[0].custom_id and message.mentions[0] == other:
                 return await interaction.response.send_message("You have already sent a valentine to this person!", ephemeral=True)
 
