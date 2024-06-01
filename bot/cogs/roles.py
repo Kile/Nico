@@ -88,7 +88,7 @@ class Roles(commands.Cog):
 
     @roles.command()
     @discord.app_commands.describe(attraction="Your other role")
-    async def romantic(self, interaction: discord.Integration, attraction: Romantic):
+    async def romantic(self, interaction: discord.Interaction, attraction: Romantic):
         """Pick a role showing what your romantic attraction is"""
         if int(attraction.value) in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_roles(self.guild.get_role(int(attraction.value)))

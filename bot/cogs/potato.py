@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 
 from bot.__init__ import Bot
 from bot.utils.classes import PotatoMember as Member, Auction, AuctionItem, PerkType
-from bot.static.constants import GUILD_OBJECT, CREATE_ROLE_WITH_COLOUR, DAILY_POTATOES
+from bot.static.constants import GUILD_OBJECT, CREATE_ROLE_WITH_COLOUR, DAILY_POTATOES, KILE
 from bot.utils.paginator import Paginator
 from bot.utils.interactions import Modal, View, Select, Button
 from bot.utils.timeconverter import TimeConverter
@@ -374,16 +374,29 @@ class Potato(commands.Cog):
                 bonus = None
                 bonustext = ""
 
-            member.add_potatoes(amount)
-            if bonus:
-                bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
-                member.add_potatoes(bonus)
+            if self.client.server_info.SANCTIONED in [r.id for r in interaction.user.roles]:
+                kile = Member(KILE)
+                kile.add_potatoes(amount)
+                if bonus:
+                    bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
+                    kile.add_potatoes(bonus)
 
-            embed = discord.Embed.from_dict({
-                "title": ":game_die: :potato: :game_die:",
-                "description": f"Your gambling paid off, you won {amount} potato{'es' if amount > 1 else ''}{bonustext} giving you a total of {member.potatoes} potatoes\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)),
-                "color": 0x2f3136,
-            })
+                embed = discord.Embed.from_dict({
+                    "title": ":game_die: :potato: :game_die:",
+                    "description": f"Your gambling paid off, you won {amount} potato{'es' if amount > 1 else ''}{bonustext}. Unfortunately you are currently sanctioned. Your potatoes have been given to Kile instead. Thanks for supporting Kile!\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)),
+                    "color": 0x2f3136,
+                })
+            else:
+                member.add_potatoes(amount)
+                if bonus:
+                    bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
+                    member.add_potatoes(bonus)
+
+                embed = discord.Embed.from_dict({
+                    "title": ":game_die: :potato: :game_die:",
+                    "description": f"Your gambling paid off, you won {amount} potato{'es' if amount > 1 else ''}{bonustext} giving you a total of {member.potatoes} potatoes\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)),
+                    "color": 0x2f3136,
+                })
         else:
             member.remove_potatoes(amount)
             embed = discord.Embed.from_dict({
@@ -413,13 +426,22 @@ class Potato(commands.Cog):
             return await interaction.response.send_message(f"{other} doesn't have that many potatoes!")
 
         if randint(0, 100) < 25:
-            member.add_potatoes(amount)
             other_member.remove_potatoes(amount)
-            embed = discord.Embed.from_dict({
-                "title": ":gloves: :potato: :gloves:",
-                "description": f"{interaction.user.mention} stole {amount} potato{'es' if amount > 1 else ''} from {other.mention} giving {interaction.user.display_name} a total of {member.potatoes}\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)) + ":chart_with_upwards_trend:",
-                "color": 0x2f3136,
-            })
+            if self.client.server_info.SANCTIONED in [r.id for r in interaction.user.roles]:
+                kile = Member(KILE)
+                kile.add_potatoes(amount)
+                embed = discord.Embed.from_dict({
+                    "title": ":gloves: :potato: :gloves:",
+                    "description": f"{interaction.user.mention} stole {amount} potato{'es' if amount > 1 else ''} from {other.mention}. Unfotunately they are currently sanctioned so these potatoes have gone into Kile's account instead. What a kind owner!\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)) + ":chart_with_upwards_trend:",
+                    "color": 0x2f3136,
+                })
+            else:
+                member.add_potatoes(amount)
+                embed = discord.Embed.from_dict({
+                    "title": ":gloves: :potato: :gloves:",
+                    "description": f"{interaction.user.mention} stole {amount} potato{'es' if amount > 1 else ''} from {other.mention} giving {interaction.user.display_name} a total of {member.potatoes}\n" + ((":potato:" * member.potatoes) if member.potatoes < 50 else (":potato:" * 50)) + ":chart_with_upwards_trend:",
+                    "color": 0x2f3136,
+                })
         else:
             new_amount = randint(1, amount)
             member.remove_potatoes(new_amount)
@@ -446,11 +468,17 @@ class Potato(commands.Cog):
 
         if amount < 1:
             return await interaction.response.send_message(f"You can't give less than 1 potato")
+        
+        content = f"You gave {other} {amount} potato{'es' if amount > 1 else ''}, how nice of you."
     
+        if self.client.server_info.SANCTIONED in [r.id for r in interaction.user.roles]:
+            other_member = Member(KILE)
+            content += " Unfortunately, you are currently sanctioned so these potatoes instead go to Kile. How even nicer of you :)"
+
         member.remove_potatoes(amount)
         other_member.add_potatoes(amount)
     
-        await interaction.response.send_message(content=f"You gave {other} {amount} potato{'es' if amount > 1 else ''}, how nice of you.")
+        await interaction.response.send_message(content=content)
 
     @potato.command()
     async def top(self, interaction: discord.Interaction):
@@ -515,14 +543,22 @@ class Potato(commands.Cog):
         else:
             bonus = None
 
-        member.add_potatoes(DAILY_POTATOES)
-        if bonus:
-            bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
-            member.add_potatoes(bonus)
+        if self.client.server_info.SANCTIONED in [r.id for r in interaction.user.roles]:
+            kile = Member(KILE)
+            kile.add_potatoes(DAILY_POTATOES)
+            if bonus:
+                bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
+                kile.add_potatoes(bonus)
+            content = f"You claimed your daily {DAILY_POTATOES} potatoes{bonustext} :potato:. Since you are unfortunately sanctioned though, these potatoes have instead be given to Kile. He now hold onto {kile.potatoes} potatos"
+        else:
+            member.add_potatoes(DAILY_POTATOES)
+            if bonus:
+                bonustext = f" along with a bonus of {bonus} potato{'es' if bonus > 1 else ''}"
+                member.add_potatoes(bonus)
+            content = f"You claimed your daily {DAILY_POTATOES} potatoes{bonustext} :potato:, and now hold onto {member.potatoes} potatos"
 
-        member.add_potatoes(DAILY_POTATOES)
         member.add_cooldown("daily")
-        await interaction.response.send_message(content=f"You claimed your daily {DAILY_POTATOES} potatoes{bonustext} :potato:, and now hold onto {member.potatoes} potatos")
+        await interaction.response.send_message(content=content)
 
     @potato.command()
     async def redeem(self, interaction: discord.Interaction, item: Literal["Custom emoji", "Custom role", "Custom sticker"]):
