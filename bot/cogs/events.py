@@ -82,12 +82,16 @@ class Events(commands.Cog):
             return
         # Find if an attachment named "water.png" has been sent within the last 20 messages
         async for message in self.general_channel.history(limit=20):
-            if message.attachments and message.author == self.client.user:
-                for attachment in message.attachments:
-                    if attachment.filename == "water.png":
-                        return
+            if message.author == self.client.user:
+                if message.content.startswith(self.water_banner_url):
+                    return
+            # if message.attachments and message.author == self.client.user:
+            #     for attachment in message.attachments:
+            #         if attachment.filename == "water.png":
+            #             return
                         
-        await self.general_channel.send(file=discord.File(filename="water.png", fp=BytesIO(self.water_banner)))
+        # await self.general_channel.send(file=discord.File(filename="water.png", fp=BytesIO(self.water_banner)))
+        await self.general_channel.send(self.water_banner_url)
 
     @water.before_loop
     async def before_status(self):
