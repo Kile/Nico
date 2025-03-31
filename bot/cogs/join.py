@@ -109,7 +109,7 @@ class Join(commands.Cog):
         view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
 
-        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
+        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
 
         await view.wait()
 

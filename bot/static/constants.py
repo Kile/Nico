@@ -24,6 +24,8 @@ MOTM = DB["motm"]
 DISBOARD = 302050872383242240
 KILE = 606162661184372736
 
+IMAGE_QUESTION_REGEX = r"(no|can'?t|cannot|how|why).*(send|upload).*(image|gif|attachment).*\??"
+
 DAILY_POTATOES = 3
 
 MOTM_VOTE_LIMIT = 3

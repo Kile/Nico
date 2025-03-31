@@ -4,11 +4,11 @@ import discord
 from discord.ext import commands, tasks
 
 from bot.__init__ import Bot
-from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO
+from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO, IMAGE_QUESTION_REGEX
 from bot.utils.classes import Member, PotatoMember, HelloAgain
 from bot.utils.interactions import View, Button
 
-from io import BytesIO
+from re import search, IGNORECASE
 from typing import Dict
 from random import randint, choices
 from datetime import datetime, timedelta
@@ -169,6 +169,19 @@ class Events(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.guild != self.guild: return
         HelloAgain().add_message(message.author.id)
+
+        if search(IMAGE_QUESTION_REGEX, message.content, IGNORECASE):
+            await message.channel.send(
+                embed=discord.Embed(
+                    title="Image question detected 👀",
+                    description="Looks like you are asking on why you cannot send images!" + \
+                        "You need to pass the first stage of verification to be able to send images in the server." + \
+                        "Find detailed information on how to do this in <#726053325623263293>!",
+                    color=0x2f3136
+                ),
+                reference=message,
+                mention_author=False
+            )
 
         if ACTIVITY_EVENT and not message.author.bot:
             self.handle_score(message)
