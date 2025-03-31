@@ -174,8 +174,8 @@ class Events(commands.Cog):
             await message.channel.send(
                 embed=discord.Embed(
                     title="Image question detected 👀",
-                    description="Looks like you are asking on why you cannot send images!" + \
-                        "You need to pass the first stage of verification to be able to send images in the server." + \
+                    description="Looks like you are asking on why you cannot send images! " + \
+                        "You need to pass the first stage of verification to be able to send images in the server. " + \
                         "Find detailed information on how to do this in <#726053325623263293>!",
                     color=0x2f3136
                 ),
