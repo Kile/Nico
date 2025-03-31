@@ -83,7 +83,7 @@ class Partners(commands.Cog):
             embed.add_field(
                 name=partner_invite.guild.name if not isinstance(partner_invite, str) else partner_invite, 
                 value="Joins: " + str(partner["uses"]) + "\n" + 
-                "PM responsible: " + str(self.client.get_user(partner["added_by"])),
+                "PM responsible: " + self.client.get_user(partner["added_by"]).display_name,
         )
 
         await interaction.followup.send(embed=embed)
