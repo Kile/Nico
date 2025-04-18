@@ -80,7 +80,7 @@ class Join(commands.Cog):
 
     @property
     def general_channel(self) -> discord.TextChannel:
-        return self.guild.get_channel(self.client.server_info.GENERAL_CHANNEL)
+        return self.guild.get_channel(1007977199153987686)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
