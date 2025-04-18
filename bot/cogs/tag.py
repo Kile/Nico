@@ -24,7 +24,7 @@ class Tag(commands.Cog):
         
         # remove the tag role
         if TAG_ROLE in [r.id for r in interaction.user.roles]:
-            await interaction.user.remove_roles(TAG_ROLE)
+            await interaction.user.remove_roles(interaction.guild.get_role(TAG_ROLE))
             return await interaction.response.send_message("You have been removed from the tag role.", ephemeral=True)
         
     # Add tag role on join
@@ -34,6 +34,6 @@ class Tag(commands.Cog):
 
         if member.bot: return
 
-        await member.add_roles(TAG_ROLE)
+        await member.add_roles(member.guild.get_role(TAG_ROLE))
 
 Cog = Tag
