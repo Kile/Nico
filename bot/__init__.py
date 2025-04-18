@@ -45,6 +45,8 @@ class Bot(commands.Bot):
 
     async def _change_presence(self) -> None:
         """Changes the bot's presence to the current membercount"""
+        # TEMPORARY
+        return
         a = discord.Activity(name=f"over {self.get_guild(self.server_info.ID).member_count} members", type=discord.ActivityType.watching)
         await self.change_presence(activity=a, status=discord.Status.online)
 
