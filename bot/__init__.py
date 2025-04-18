@@ -57,10 +57,13 @@ class Bot(commands.Bot):
 async def main():
     session = aiohttp.ClientSession()
     # Create the bot instance.
+    intents = discord.Intents.default()
+    intents.message_content = True
+    intents.members = True
     bot = Bot(
         command_prefix="Will " if is_dev() else "Nico ",
         description="Nico's Safe Space's own discord bot",
-        intents=discord.Intents.all(),
+        intents=intents,
         session=session
     )
     bot.session = session
