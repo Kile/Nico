@@ -15,7 +15,7 @@ class Tag(commands.Cog):
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
-        if not interaction.data.get("custom_id") == "full_access":
+        if interaction.data.get("custom_id") != "full_access":
             return
         
         # If they have been in the server for less than 24 hrs, say no
