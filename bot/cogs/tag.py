@@ -25,7 +25,9 @@ class Tag(commands.Cog):
         # remove the tag role
         if TAG_ROLE in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_roles(interaction.guild.get_role(TAG_ROLE))
-            return await interaction.response.send_message("You have been removed from the tag role.", ephemeral=True)
+            return await interaction.response.send_message("You have been granted access to the server.", ephemeral=True)
+        else:
+            return await interaction.response.send_message("You already have server access bro", ephemeral=True)
         
     # Add tag role on join
     @commands.Cog.listener()
