@@ -233,7 +233,8 @@ class Events(commands.Cog):
         if member.guild != self.guild: return
         HelloAgain().remove_user(member.id)
 
-        await self.client._change_presence()
+        if len(member.guild.members) % 20 == 0:
+            await self.client._change_presence()
         if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
             EVENT.delete_one({ "_id": member.id })
         POTATO.delete_one({ "_id": member.id })

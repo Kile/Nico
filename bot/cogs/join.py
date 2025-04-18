@@ -86,7 +86,8 @@ class Join(commands.Cog):
     async def on_member_join(self, member: discord.Member):
         if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
 
-        await self.client._change_presence()
+        if len(member.guild.members) % 20 == 0:
+            await self.client._change_presence()
         if member.bot: return
 
         HelloAgain().add_user(member.id)
