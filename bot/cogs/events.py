@@ -221,6 +221,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
+        return # TEMPORARILY DISABLED
         if after.guild != self.guild: return
 
         if before.roles != after.roles:
@@ -230,6 +231,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
+        return # TEMPORARILY DISABLED
         if member.guild != self.guild: return
         HelloAgain().remove_user(member.id)
 

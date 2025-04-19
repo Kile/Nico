@@ -84,6 +84,7 @@ class Join(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        return # TEMPORARILY DISABLED
         if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
 
         if len(member.guild.members) % 20 == 0:
@@ -110,12 +111,11 @@ class Join(commands.Cog):
         view = View(timeout=600)
         view.add_item(WelcomeButton(message, member))
 
-        # TEMPORARILY DISABLED
-        # notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
+        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
 
-        # await view.wait()
+        await view.wait()
 
-        # await view.disable(notification)
+        await view.disable(notification)
 
     @discord.app_commands.command()
     async def join(self, interaction: discord.Interaction):

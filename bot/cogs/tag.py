@@ -32,6 +32,7 @@ class Tag(commands.Cog):
     # Add tag role on join
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        return # TEMPORARILY DISABLED
         if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
 
         if member.bot: return
