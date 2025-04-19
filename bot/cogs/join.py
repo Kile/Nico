@@ -84,17 +84,15 @@ class Join(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        return # TEMPORARILY DISABLED
         if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
 
-        if len(member.guild.members) % 20 == 0:
+        if len(member.guild.members) % 50 == 0:
             await self.client._change_presence()
         if member.bot: return
 
-        HelloAgain().add_user(member.id)
-        await member.add_roles(self.new_role)
+        # HelloAgain().add_user(member.id)
         try:
-            await member.add_roles(self.member_role)
+            await member.add_roles(self.member_role, self.new_role)
         except Exception: # Role may already be added (multiple bots try to add it)
             pass
 
@@ -108,14 +106,14 @@ class Join(commands.Cog):
         })
         message = await self.welcome_channel.send(content=member.mention, embed=embed)
 
-        view = View(timeout=600)
-        view.add_item(WelcomeButton(message, member))
+        # view = View(timeout=600)
+        # view.add_item(WelcomeButton(message, member))
 
-        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
+        # notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
 
-        await view.wait()
+        # await view.wait()
 
-        await view.disable(notification)
+        # await view.disable(notification)
 
     @discord.app_commands.command()
     async def join(self, interaction: discord.Interaction):

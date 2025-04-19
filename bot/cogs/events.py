@@ -224,8 +224,6 @@ class Events(commands.Cog):
 
     # @commands.Cog.listener()
     # async def on_member_update(self, before: discord.Member, after: discord.Member):
-    #     # TEMPORARILY DISABLED
-
     #     if after.guild != self.guild: return
 
     #     if before.roles != after.roles:
@@ -233,17 +231,17 @@ class Events(commands.Cog):
     #             PotatoMember(after.id).add_potatoes(2)
     #             await self.potato_channel.send(f"{after.mention} has bumped the server on https://discords.com/servers/kidsinthedark ! They have been awarded a bonus of 2🥔")
 
-    # @commands.Cog.listener()
-    # async def on_member_remove(self, member: discord.Member):
-    #     # TEMPORARILY DISABLED
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        # TEMPORARILY DISABLED
 
-    #     if member.guild != self.guild: return
-    #     HelloAgain().remove_user(member.id)
+        if member.guild != self.guild: return
+        # HelloAgain().remove_user(member.id)
 
-    #     if len(member.guild.members) % 20 == 0:
-    #         await self.client._change_presence()
-    #     if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
-    #         EVENT.delete_one({ "_id": member.id })
-    #     POTATO.delete_one({ "_id": member.id })
+        if len(member.guild.members) % 50 == 0:
+            await self.client._change_presence()
+        if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
+            EVENT.delete_one({ "_id": member.id })
+        # POTATO.delete_one({ "_id": member.id })
 
 Cog = Events
