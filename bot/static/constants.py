@@ -38,6 +38,9 @@ TRIALS = CONSTANTS.find_one({"_id": "trials"})["active"] if CONSTANTS.find_one({
 
 WELCOME_MESSAGE = \
 """ Welcome to Nico's Safe Space **{}**!
+
+Due to us getting tags, you can **ignore the rest of this message** until you have full access to the server through <#1362726898685317220>. YOU DO NOT NEED FULL ACCESS TO USE THE TAG. If you are just here for the tag, you already have it.
+
 I am Nico and I am watching over this server. To ensure you are familiar with how this server works, please read through <#710941242963263638> and <#711707649829240972>. Afterwards hop into my dms and use the slash command `/join` to answer a few questions about what is explained in those channels to ensure you have read them.
 
 Your answers will be automatically checked, so make sure you write short answers as long ones might not be included in our possible answer list.
