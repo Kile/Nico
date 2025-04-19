@@ -47,9 +47,11 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.remove_sos_role.start()
-        self.water.start()
-        print("Loaded events cog")
+        if not self.remove_sos_role.is_running():
+            self.remove_sos_role.start()
+        if not self.water.is_running():
+            self.water.start()
+        print("Logged in as {0.user}!".format(self.client))
 
     @tasks.loop(hours=12)
     async def hello_again(self):
