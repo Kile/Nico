@@ -282,8 +282,8 @@ class Potato(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.client.wait_until_ready()
-        if not self.auction_loop.is_running():
-            self.auction_loop.start()
+        # if not self.auction_loop.is_running():
+        #     self.auction_loop.start()
 
     def _intersect(self, list1: list, list2: list) -> list:
         return list(set(list1).intersection(set(list2)))

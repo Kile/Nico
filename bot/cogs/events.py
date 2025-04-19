@@ -53,23 +53,23 @@ class Events(commands.Cog):
             self.water.start()
         print("Logged in as {0.user}!".format(self.client))
 
-    @tasks.loop(hours=12)
-    async def hello_again(self):
-        """Sends a reminder the server exists if the user has not interacted in it a week after joining"""
-        hello_again_obj = HelloAgain()
-        members = hello_again_obj.needs_hello_again()
+    # @tasks.loop(hours=12)
+    # async def hello_again(self):
+    #     """Sends a reminder the server exists if the user has not interacted in it a week after joining"""
+    #     hello_again_obj = HelloAgain()
+    #     members = hello_again_obj.needs_hello_again()
 
-        for member in members:
-            m = self.guild.get_member(member)
-            embed = discord.Embed.from_dict({
-                "title": "Hello again!",
-                "description": f"Hey {m.mention}, you haven't talked a lot since you joined in Nico's Safe Space! Don't be shy, we'd love to hear more from you! Say hi in <#{self.client.server_info.GENERAL_CHANNEL}>!",
-                "color": 0x2f3136
-            })
-            try:
-                await m.send(embed=embed)
-            except discord.Forbidden: # dms closed
-                pass
+    #     for member in members:
+    #         m = self.guild.get_member(member)
+    #         embed = discord.Embed.from_dict({
+    #             "title": "Hello again!",
+    #             "description": f"Hey {m.mention}, you haven't talked a lot since you joined in Nico's Safe Space! Don't be shy, we'd love to hear more from you! Say hi in <#{self.client.server_info.GENERAL_CHANNEL}>!",
+    #             "color": 0x2f3136
+    #         })
+    #         try:
+    #             await m.send(embed=embed)
+    #         except discord.Forbidden: # dms closed
+    #             pass
 
     @tasks.loop(hours=2)
     async def water(self):
@@ -171,7 +171,7 @@ class Events(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.guild != self.guild: return
         if message.author.bot: return
-        HelloAgain().add_message(message.author.id)
+        # HelloAgain().add_message(message.author.id)
 
         if search(IMAGE_QUESTION_REGEX, message.content, IGNORECASE):
             await message.channel.send(
@@ -222,26 +222,28 @@ class Events(commands.Cog):
             PotatoMember(message.interaction.user.id).add_potatoes(2)
             await self.potato_channel.send(f"{message.interaction.user.mention} has bumped the server! They have been awarded a bonus of 2🥔")
 
-    @commands.Cog.listener()
-    async def on_member_update(self, before: discord.Member, after: discord.Member):
-        return # TEMPORARILY DISABLED
-        if after.guild != self.guild: return
+    # @commands.Cog.listener()
+    # async def on_member_update(self, before: discord.Member, after: discord.Member):
+    #     # TEMPORARILY DISABLED
 
-        if before.roles != after.roles:
-            if self.voted_role in after.roles and self.voted_role not in before.roles:
-                PotatoMember(after.id).add_potatoes(2)
-                await self.potato_channel.send(f"{after.mention} has bumped the server on https://discords.com/servers/kidsinthedark ! They have been awarded a bonus of 2🥔")
+    #     if after.guild != self.guild: return
 
-    @commands.Cog.listener()
-    async def on_member_remove(self, member: discord.Member):
-        return # TEMPORARILY DISABLED
-        if member.guild != self.guild: return
-        HelloAgain().remove_user(member.id)
+    #     if before.roles != after.roles:
+    #         if self.voted_role in after.roles and self.voted_role not in before.roles:
+    #             PotatoMember(after.id).add_potatoes(2)
+    #             await self.potato_channel.send(f"{after.mention} has bumped the server on https://discords.com/servers/kidsinthedark ! They have been awarded a bonus of 2🥔")
 
-        if len(member.guild.members) % 20 == 0:
-            await self.client._change_presence()
-        if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
-            EVENT.delete_one({ "_id": member.id })
-        POTATO.delete_one({ "_id": member.id })
+    # @commands.Cog.listener()
+    # async def on_member_remove(self, member: discord.Member):
+    #     # TEMPORARILY DISABLED
+
+    #     if member.guild != self.guild: return
+    #     HelloAgain().remove_user(member.id)
+
+    #     if len(member.guild.members) % 20 == 0:
+    #         await self.client._change_presence()
+    #     if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
+    #         EVENT.delete_one({ "_id": member.id })
+    #     POTATO.delete_one({ "_id": member.id })
 
 Cog = Events
