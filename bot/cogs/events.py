@@ -170,6 +170,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.guild != self.guild: return
+        if message.author.bot: return
         HelloAgain().add_message(message.author.id)
 
         if search(IMAGE_QUESTION_REGEX, message.content, IGNORECASE):
