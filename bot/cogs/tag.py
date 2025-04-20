@@ -18,18 +18,16 @@ class Tag(commands.Cog):
         if interaction.data.get("custom_id") != "full_access":
             return
         
-        await interaction.response.defer(ephemeral=True)
-        
         # If they have been in the server for less than 24 hrs, say no
         if interaction.user.joined_at > discord.utils.utcnow() - timedelta(hours=24):
-            return await interaction.followup.send("You need to be in the server for at least 24 hours to get full access.", ephemeral=True)
+            return await interaction.response.send_message("You need to be in the server for at least 24 hours to get full access.", ephemeral=True)
         
         # remove the tag role
         if TAG_ROLE in [r.id for r in interaction.user.roles]:
             await interaction.user.remove_roles(interaction.guild.get_role(TAG_ROLE))
-            return await interaction.followup.send("You have been granted access to the server.", ephemeral=True)
+            return await interaction.response.send_message("You have been granted access to the server.", ephemeral=True)
         else:
-            return await interaction.followup.send("You already have server access bro", ephemeral=True)
+            return await interaction.response.send_message("You already have server access bro", ephemeral=True)
         
     # Add tag role on join
     @commands.Cog.listener()

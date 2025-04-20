@@ -238,7 +238,7 @@ class Events(commands.Cog):
         if member.guild != self.guild: return
         # HelloAgain().remove_user(member.id)
 
-        if len(member.guild.members) % 100 == 0:
+        if len(member.guild.members) % 250 == 0:
             await self.client._change_presence()
         if ACTIVITY_EVENT and not member.bot and EVENT.find_one({ "_id": member.id }):
             EVENT.delete_one({ "_id": member.id })
