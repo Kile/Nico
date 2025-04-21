@@ -2,9 +2,10 @@ from ctypes.wintypes import POINT
 import discord
 
 from discord.ext import commands, tasks
+from discord.ui import View, Button
 
 from bot.__init__ import Bot
-from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO, IMAGE_QUESTION_REGEX
+from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO, IMAGE_QUESTION_REGEX, CONSTANTS
 from bot.utils.classes import Member, PotatoMember, HelloAgain
 from bot.utils.interactions import View, Button
 
@@ -166,6 +167,62 @@ class Events(commands.Cog):
 
         member.add_message(message)
         member.add_points(base_points)
+
+    async def verify_callback(self, interaction: discord.Interaction):
+        """Callback for the verify button"""
+        applicant = interaction.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+
+        role = interaction.guild.get_role(self.client.server_info.VERIFIED_ROLE) 
+        # Workaround for not being able to access wether it is a testing evironment or not
+
+        await applicant.add_roles(role)
+        await interaction.response.send_message(f"✅ Verified {applicant.mention}", ephemeral=True)
+        try:
+            await applicant.send(f"Your application in Nico's Safe Space has been approved and you can now pick up roles (with `/roles help`) to access sensitive channels! ")
+        except discord.HTTPException:
+            pass # Ignore closed dms
+
+        # Edit the buttons
+        verified_button = Button(style=discord.ButtonStyle.green, label=f"Verified by {interaction.user}", disabled=True)
+        view = View()
+        view.add_item(verified_button)
+
+        await interaction.message.edit(view=view)
+
+    async def deny_callback(self, interaction: discord.Interaction):
+        applicant = interaction.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+
+        # save applicant id to denied database
+        existing = CONSTANTS.find_one({"_id": "denied"})
+
+        if not existing:
+            CONSTANTS.insert_one({"_id": "denied", "ids": [applicant.id]})
+        else:
+            CONSTANTS.update_one({"_id": "denied"}, {"$push": {"ids": applicant.id}})
+
+        await interaction.response.send_message(f"✅ Denied {applicant.mention}", ephemeral=True)
+
+        try:
+            await applicant.send(f"Your application in Nico's Safe Space has been denied. If you think this is a mistake, please contact a staff member.")
+        except discord.HTTPException:
+            pass
+
+        # Edit the buttons
+        denied_button = Button(style=discord.ButtonStyle.grey, label=f"Denied by {interaction.user}", disabled=True)
+        view = View()
+        view.add_item(denied_button)
+
+        await interaction.message.edit(view=view)
+
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+        if interaction.guild != self.guild: return
+        if interaction.user.bot: return
+
+        if interaction.data["custom_id"].startswith("verify"):
+            await self.verify_callback(interaction)
+        elif interaction.data["custom_id"].startswith("deny"):
+            await self.deny_callback(interaction)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

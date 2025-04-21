@@ -92,7 +92,7 @@ class Application(commands.Cog):
         channel = self.client.get_channel(self.client.server_info.APPLICATION_CHANNEL)
         view = PersistentVerificationView(interaction.user.id)
         application = await channel.send(embed=self._to_embed(interaction.user, answers), view=view)
-        CONSTANTS.update_one({"_id": "pending_applications"}, {"$push": {"ids": {"message": application.id, "applicant": interaction.user.id}}})
+        # CONSTANTS.update_one({"_id": "pending_applications"}, {"$push": {"ids": {"message": application.id, "applicant": interaction.user.id}}})
         await modal.interaction.response.send_message("✅ Application submitted. Please be patient while it is reviewed. You will be dmed in case of a decision.", ephemeral=True)
 
 Cog = Application
