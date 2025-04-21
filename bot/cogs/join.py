@@ -2,6 +2,7 @@ import discord
 
 from discord.ext import commands
 from random import sample
+from typing import List
 
 from bot.__init__ import Bot
 from bot.utils.interactions import Modal, View, Button
@@ -58,6 +59,7 @@ class Join(commands.Cog):
 
     def __init__(self, client: Bot):
         self.client = client
+        self.queued_welcome: List[discord.Member] = []
 
     async def cog_load(self):
         print("Loaded join cog")
@@ -96,15 +98,21 @@ class Join(commands.Cog):
         except Exception: # Role may already be added (multiple bots try to add it)
             pass
 
-        embed = discord.Embed.from_dict({
-            "title": "Welcome to the server!",
-            "description": WELCOME_MESSAGE.format(member.display_name) + "\n\nI hope you enjoy your stay!",
-            "color": 0x2f3136,
-            "footer": {
-                "text": "Joined at " + member.joined_at.strftime("%H:%M:%S on %d/%m/%Y")
-            }
-        })
-        message = await self.welcome_channel.send(content=member.mention, embed=embed)
+        self.queued_welcome.append(member)
+
+        if len(self.queued_welcome) > 10:
+            mentions = ", ".join([m.mention for m in self.queued_welcome][:-1]) + " and " + self.queued_welcome[-1].mention
+            names = ", ".join([m.display_name for m in self.queued_welcome][:-1]) + " and " + self.queued_welcome[-1].display_name
+            embed = discord.Embed.from_dict({
+                "title": "Welcome to the server!",
+                "description": WELCOME_MESSAGE.format(names) + "\n\nI hope you enjoy your stay!",
+                "color": 0x2f3136,
+                "footer": {
+                    "text": "Joined at " + member.joined_at.strftime("%H:%M:%S on %d/%m/%Y")
+                }
+            })
+            message = await self.welcome_channel.send(content=mentions, embed=embed)
+            self.queued_welcome = []
 
         # view = View(timeout=600)
         # view.add_item(WelcomeButton(message, member))
