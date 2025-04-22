@@ -2,6 +2,7 @@ import discord
 import aiohttp
 
 from discord.ext import commands
+from urllib.parse import quote
 
 from . import cogs
 from .static.constants import TOKEN, ServerInfo, GUILD_OBJECT, ACTIVITY_EVENT, TRIALS, CONSTANTS
@@ -26,6 +27,7 @@ class Bot(commands.Bot):
         self.server_info = ServerInfo.TEST if self.is_dev else ServerInfo.NSS
 
         self.session: aiohttp.ClientSession = None
+        self.translate_cache = {}
 
     def convert_to_timestamp(self, id: int, args: str = "f") -> str:
         """Turns a discord snowflake into a discord timestamp string"""
@@ -51,6 +53,58 @@ class Bot(commands.Bot):
     async def on_ready(self) -> None:
         await self.wait_until_ready()
         await self._change_presence()
+
+    async def translate_callback(self, interaction: discord.Interaction) -> None:
+        cache_id = interaction.data["custom_id"].split(":")[1]
+        target = interaction.locale.value.split("-")[0]
+
+        if "en" == target:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="You silly billy!",
+                    description="You are already using the correct language!")
+                , 
+                ephemeral=True
+            )
+
+        if self.translate_cache.get(cache_id, False) and self.translate_cache[cache_id].get(target, False):
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Translation",
+                    description=self.translate_cache[cache_id][target])
+                , 
+                ephemeral=True
+            )
+        
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
+        original_message = interaction.message
+        has_embed = not not original_message.embeds
+        text = original_message.content if not has_embed else original_message.embeds[0].description
+        coded_text = quote(text, safe="")
+
+        res = await self.session.get(
+            "http://api.mymemory.translated.net/get?q="
+            + coded_text
+            + "&langpair=en|"
+            + target.lower()
+        )
+
+        if not (res.status == 200):
+            return await interaction.edit_original_response(content=":x: " + await res.text(), ephemeral=True)
+
+        translation = await res.json()
+        full_translation = translation["responseData"]["translatedText"]
+
+        self.translate_cache[cache_id] = self.translate_cache.get(cache_id, {})
+        self.translate_cache[cache_id][target] = full_translation
+        embed = discord.Embed(
+            title="Translation",
+            description=full_translation
+        )
+        await interaction.edit_original_response(
+            embed=embed,
+        )
 
 async def main():
     session = aiohttp.ClientSession()

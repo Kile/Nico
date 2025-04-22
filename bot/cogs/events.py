@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 from discord.ui import View, Button
 
 from bot.__init__ import Bot
-from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, POTATO, IMAGE_QUESTION_REGEX, CONSTANTS
+from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, TRANSLATE_EMOJI, IMAGE_QUESTION_REGEX, CONSTANTS, TAG_QUESTION_REGEX, TAG_INTERACTIONAL_REGEX
 from bot.utils.classes import Member, PotatoMember, HelloAgain
 from bot.utils.interactions import View, Button
 
@@ -216,13 +216,99 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
-        if interaction.guild != self.guild: return
+        if not interaction.data.get("custom_id", False): return
+        if interaction.guild != self.guild and not interaction.data["custom_id"].startswith("translate"): return
         if interaction.user.bot: return
 
         if interaction.data["custom_id"].startswith("verify"):
             await self.verify_callback(interaction)
         elif interaction.data["custom_id"].startswith("deny"):
             await self.deny_callback(interaction)
+        elif interaction.data["custom_id"].startswith("translate"):
+            return await self.client.translate_callback(interaction)
+        elif interaction.data["custom_id"].startswith("un_timeout"):
+            if not interaction.user.guild_permissions.moderate_members:
+                return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+            member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+            if not member:
+                return await interaction.response.send_message("Member not found", ephemeral=True)
+            if member.timed_out_until:
+                await member.timeout(None, reason="Un-timeout by moderator")
+                await interaction.response.send_message(f"✅ Un-timed out {member.mention}", ephemeral=True)
+            else:
+                await interaction.response.send_message("Member is not timed out", ephemeral=True)
+            view = View().add_item(Button(label="Removed timeout", style=discord.ButtonStyle.green, disabled=True))
+            await interaction.message.edit(view=view)
+        elif interaction.data["custom_id"].startswith("kick"):
+            if not interaction.user.guild_permissions.kick_members:
+                return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+            member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+            if not member:
+                return await interaction.response.send_message("Member not found", ephemeral=True)
+            try:
+                await member.kick(reason="Kicked by moderator")
+                await interaction.response.send_message(f"✅ Kicked {member.mention}", ephemeral=True)
+            except discord.Forbidden:
+                await interaction.response.send_message("I don't have the permissions to do that!", ephemeral=True)
+            view = View().add_item(Button(label="Kicked", style=discord.ButtonStyle.red, disabled=True))
+            await interaction.message.edit(view=view)
+        elif interaction.data["custom_id"].startswith("ban"):
+            if not interaction.user.guild_permissions.ban_members:
+                return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+            member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+            if not member:
+                return await interaction.response.send_message("Member not found", ephemeral=True)
+            try:
+                await member.ban(reason="Banned by moderator")
+                await interaction.response.send_message(f"✅ Banned {member.mention}", ephemeral=True)
+            except discord.Forbidden:
+                await interaction.response.send_message("I don't have the permissions to do that!", ephemeral=True)
+            view = View().add_item(Button(label="Banned", style=discord.ButtonStyle.red, disabled=True))
+            await interaction.message.edit(view=view)
+
+    async def tag_question_core(self, message: discord.Message, certain: bool = False):
+        """Handles the tag question"""
+        if message.author.joined_at < discord.utils.utcnow() - timedelta(days=14):
+            return
+        
+        mod_message = discord.Embed(
+            title="Tag question detected",
+            description="> " + message.content,
+            color=0x2f3136
+        )
+        mod_message.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+        mod_message.set_footer(text=f"User ID: {message.author.id} | Channel ID: {message.channel.id} | Certainty: {'high' if certain else 'low'}")
+        view = View()
+        un_timeout_button = Button(label="Remove timeout", style=discord.ButtonStyle.green, custom_id=f"un_timeout:{message.author.id}")
+        kick_button = Button(label="Kick", style=discord.ButtonStyle.red, custom_id=f"kick:{message.author.id}")
+        ban_button = Button(label="Ban", style=discord.ButtonStyle.red, custom_id=f"ban:{message.author.id}")
+        view.add_item(un_timeout_button).add_item(kick_button).add_item(ban_button)
+        await self.client.get_channel(self.client.server_info.MOD_CHANNEL).send(embed=mod_message, view=view)
+
+        # Delete message and timeout user
+        await message.delete()
+        try:
+            await message.author.timeout(discord.utils.utcnow() + timedelta(days=1), reason="Asked about tag")
+            # Add joined for tag role
+            role = self.guild.get_role(self.client.server_info.JOINED_FOR_TAG_ROLE)
+            await message.author.add_roles(role)
+        except discord.Forbidden:
+            pass
+
+        # Dm the user about why they were timed out
+        embed = discord.Embed(title="Timed out for mentioning tags",
+            description="You were muted for asking about tags."
+            + "\nTo use our VIP tag you do not need to have full access to the server."
+            + "\nYou can get the tag by going to Settings > User Profile > Tags and selecting the tag you want."
+            + "\nIf you want to actually participate in the server, you can click the button to come back when your timeout ends."
+        )
+        view = View()
+        translate_button = Button(label="Translate", style=discord.ButtonStyle.blurple, custom_id=f"translate:tag_check", emoji=TRANSLATE_EMOJI)
+        view.add_item(translate_button)
+        try:
+            await message.author.send(embed=embed, view=view)
+        except discord.Forbidden:
+            pass
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -242,6 +328,11 @@ class Events(commands.Cog):
                 reference=message,
                 mention_author=False
             )
+
+        if search(TAG_QUESTION_REGEX, message.content, IGNORECASE):
+            await self.tag_question_core(message, True)
+        elif search(TAG_INTERACTIONAL_REGEX, message.content, IGNORECASE):
+            await self.tag_question_core(message, False)
 
         if ACTIVITY_EVENT and not message.author.bot:
             self.handle_score(message)

@@ -216,7 +216,7 @@ class Roles(commands.Cog):
         cabins = [{"role": self.guild.get_role(v["id"]), "icon": v["icon"]} for k, v in self.client.server_info.LEVEL_ROLES.items() if self.guild.get_role(k) in interaction.user.roles]
 
         if not cabins:
-            return await interaction.response.send_message("You need to be at least lvl 5 to use this command!", ephemeral=True)
+            return await interaction.response.send_message("You need to be at least lvl 10 to use this command!", ephemeral=True)
 
         cabin_options = [discord.SelectOption(label=cabin["role"].name, value=str(cabin["role"].id), emoji=cabin["icon"]) for cabin in cabins]
 
