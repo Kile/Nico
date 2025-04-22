@@ -19,8 +19,8 @@ class Tag(commands.Cog):
             return
         
         # If they have been in the server for less than 24 hrs, say no
-        if interaction.user.joined_at > discord.utils.utcnow() - timedelta(hours=24):
-            return await interaction.response.send_message("You need to be in the server for at least 24 hours to get full access.", ephemeral=True)
+        if interaction.user.joined_at > discord.utils.utcnow() - timedelta(days=2):
+            return await interaction.response.send_message("You need to be in the server for at least 48 hours to get full access.", ephemeral=True)
         
         # remove the tag role
         if TAG_ROLE in [r.id for r in interaction.user.roles]:
