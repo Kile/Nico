@@ -101,6 +101,7 @@ class Bot(commands.Bot):
                 + coded_text
                 + "&langpair=en|"
                 + target.lower()
+                + "&de=kile@killua.dev" # increased usage limit
             )
 
             if not (res.status == 200):
