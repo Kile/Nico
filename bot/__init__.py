@@ -87,7 +87,7 @@ class Bot(commands.Bot):
         for chunk in chunks:
             if len(formatted_chunks) == 0:
                 formatted_chunks.append(chunk)
-            elif len(formatted_chunks[-1]) + len(chunk) > 500:
+            elif len(formatted_chunks[-1]) + len(chunk) > 400:
                 formatted_chunks.append(chunk)
             else:
                 formatted_chunks[-1] += "\n" + chunk
