@@ -9,7 +9,7 @@ from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, TRANSLATE_EMOJ
 from bot.utils.classes import Member, PotatoMember, HelloAgain
 from bot.utils.interactions import View, Button
 
-from re import search, IGNORECASE
+from re import search, IGNORECASE, sub, escape
 from typing import Dict
 from random import randint, choices
 from datetime import datetime, timedelta
@@ -45,6 +45,10 @@ class Events(commands.Cog):
     @property
     def voted_role(self) -> discord.Role:
         return self.guild.get_role(self.client.server_info.VOTED_ROLE)
+    
+    @property
+    def new_role(self) -> discord.Role:
+        return self.guild.get_role(self.client.server_info.NEW_ROLE)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -266,24 +270,26 @@ class Events(commands.Cog):
             view = View().add_item(Button(label="Banned", style=discord.ButtonStyle.red, disabled=True))
             await interaction.message.edit(view=view)
 
+    def highlight_question_and_keyword(sekf, text: str):
+        match_question = search(TAG_QUESTION_REGEX, text, IGNORECASE)
+        if match_question:
+            question_word = match_question.group(1)
+            keyword = match_question.group(2)
+            highlighted_text = sub(r"\b" + escape(question_word) + r"\b", f"**__{question_word}__**", text, flags=IGNORECASE)
+            highlighted_text = sub(r"\b" + escape(keyword) + r"\b", f"**__{keyword}__**", highlighted_text, flags=IGNORECASE)
+            return highlighted_text, [question_word, keyword]
+
+        match_interactional = search(TAG_INTERACTIONAL_REGEX, text, IGNORECASE)
+        if match_interactional:
+            keyword = match_interactional.group(2)
+            highlighted_text = sub(r"\b" + escape(keyword) + r"\b", f"**__{keyword}__**", text, flags=IGNORECASE)
+            # We don't have an explicit question word in this regex to highlight
+            return highlighted_text, [keyword]
+        
     async def tag_question_core(self, message: discord.Message, certain: bool = False):
         """Handles the tag question"""
-        if message.author.joined_at < discord.utils.utcnow() - timedelta(days=14):
+        if not self.new_role in message.author.roles:
             return
-        
-        mod_message = discord.Embed(
-            title="Tag question detected",
-            description="> " + message.content,
-            color=0x2f3136
-        )
-        mod_message.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-        mod_message.set_footer(text=f"User ID: {message.author.id} | Channel ID: {message.channel.id} | Certainty: {'high' if certain else 'low'}")
-        view = View()
-        un_timeout_button = Button(label="Remove timeout", style=discord.ButtonStyle.green, custom_id=f"un_timeout:{message.author.id}")
-        kick_button = Button(label="Kick", style=discord.ButtonStyle.red, custom_id=f"kick:{message.author.id}")
-        ban_button = Button(label="Ban", style=discord.ButtonStyle.red, custom_id=f"ban:{message.author.id}")
-        view.add_item(un_timeout_button).add_item(kick_button).add_item(ban_button)
-        await self.client.get_channel(self.client.server_info.MOD_CHANNEL).send(embed=mod_message, view=view)
 
         # Delete message and timeout user
         await message.delete()
@@ -305,10 +311,28 @@ class Events(commands.Cog):
         view = View()
         translate_button = Button(label="Translate", style=discord.ButtonStyle.blurple, custom_id=f"translate:tag_check", emoji=TRANSLATE_EMOJI)
         view.add_item(translate_button)
+        could_dm = True
         try:
             await message.author.send(embed=embed, view=view)
-        except discord.Forbidden:
-            pass
+        except discord.HTTPException:
+            could_dm = False
+
+        text_with_matches_highlighted, keywords = self.highlight_question_and_keyword(message.content)
+
+        mod_message = discord.Embed(
+            title="Tag question detected",
+            description=message.author.mention + " in " + message.channel.mention + ":\n> " + text_with_matches_highlighted
+            + "\n\n" + "Keywords triggered: " + ", ".join(keywords),
+            color=0x2f3136
+        )
+        mod_message.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
+        mod_message.set_footer(text=f"User ID: {message.author.id} | Dm went through: {'yes' if could_dm else 'no'} | Certainty: {'high' if certain else 'low'}")
+        view = View()
+        un_timeout_button = Button(label="Remove timeout", style=discord.ButtonStyle.green, custom_id=f"un_timeout:{message.author.id}")
+        kick_button = Button(label="Kick", style=discord.ButtonStyle.red, custom_id=f"kick:{message.author.id}")
+        ban_button = Button(label="Ban", style=discord.ButtonStyle.red, custom_id=f"ban:{message.author.id}")
+        view.add_item(un_timeout_button).add_item(kick_button).add_item(ban_button)
+        await self.client.get_channel(self.client.server_info.MOD_CHANNEL).send(embed=mod_message, view=view)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

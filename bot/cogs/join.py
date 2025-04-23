@@ -83,6 +83,10 @@ class Join(commands.Cog):
     @property
     def general_channel(self) -> discord.TextChannel:
         return self.guild.get_channel(1362726520799494255)
+    
+    @property 
+    def joined_for_tag_role(self) -> discord.Role:
+        return self.guild.get_role(self.client.server_info.JOINED_FOR_TAG_ROLE)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -137,6 +141,9 @@ class Join(commands.Cog):
 
         if not self.new_role in member.roles:
             return await interaction.response.send_message("You already have access to the server!", ephemeral=True)
+        
+        if self.joined_for_tag_role in member.roles:
+            return await interaction.response.send_message("You must first click the button in <#1362726898685317220> to gain more server access!", ephemeral=True)
 
         modal = JoinModal()
 

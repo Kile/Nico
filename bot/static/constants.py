@@ -24,11 +24,11 @@ MOTM = DB["motm"]
 DISBOARD = 302050872383242240
 KILE = 606162661184372736
 
-IMAGE_QUESTION_REGEX = r"(no|can'?t|cannot|how|why).*(send|upload).*(image|gif|attachment).*\??"
+IMAGE_QUESTION_REGEX = r"(no|can'?t|cannot|how|why|give).*(send|upload).*(image|gif|attachment).*\??"
 
-TAG_QUESTION_REGEX = r"(how|where|why|what).+(tag|vip)\??"
+TAG_QUESTION_REGEX = r"(how|where|why|what|give?).+ (tag|vip)( |$|\?)"
 
-TAG_INTERACTIONAL_REGEX = r"(tag|vip).+\?"
+TAG_INTERACTIONAL_REGEX = r"(^| )(tag|vip).+\?"
 
 TRANSLATE_EMOJI = "<:translate:1364363045438099466>"
 
@@ -201,6 +201,7 @@ class NSSServer:
         756512273001873458: {"id": 1029665250380873728, "icon": "<:Plutus:1030894925828599859>"} # giveaway role: Plutus
     }
     JOINED_FOR_TAG_ROLE = 1362726731768922205
+    TRIAL_MOD_ROLE = 919779739068166164
 
 """
 Apollo level 10
@@ -254,6 +255,7 @@ class TestServer:
         1027946442431672412: {"id": 1027946539508846653, "icon": "<:DoctorStrange:1030897207953608826>"} # Dr Strange
     }
     JOINED_FOR_TAG_ROLE = 1015376452868378735
+    TRIAL_MOD_ROLE = 1
 
 class ServerInfo:
     NSS = NSSServer
