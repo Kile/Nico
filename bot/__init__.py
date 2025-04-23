@@ -87,14 +87,14 @@ class Bot(commands.Bot):
         for chunk in chunks:
             if len(formatted_chunks) == 0:
                 formatted_chunks.append(chunk)
-            elif len(formatted_chunks[-1]) + len(chunk) > 400:
+            elif len(formatted_chunks[-1]) + len(chunk) > 450:
                 formatted_chunks.append(chunk)
             else:
                 formatted_chunks[-1] += "\n" + chunk
 
         result = ""
         for chunk in formatted_chunks:
-            coded_text = quote(text, safe="")
+            coded_text = quote(chunk, safe="")
 
             res = await self.session.get(
                 "http://api.mymemory.translated.net/get?q="
