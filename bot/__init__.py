@@ -81,26 +81,43 @@ class Bot(commands.Bot):
         original_message = interaction.message
         has_embed = not not original_message.embeds
         text = original_message.content if not has_embed else original_message.embeds[0].description
-        coded_text = quote(text, safe="")
 
-        res = await self.session.get(
-            "http://api.mymemory.translated.net/get?q="
-            + coded_text
-            + "&langpair=en|"
-            + target.lower()
-        )
+        chunks = text.split("\n")
+        formatted_chunks = []
+        for chunk in chunks:
+            if len(formatted_chunks) == 0:
+                formatted_chunks.append(chunk)
+            elif len(formatted_chunks[-1]) + len(chunk) > 500:
+                formatted_chunks.append(chunk)
+            else:
+                formatted_chunks[-1] += "\n" + chunk
 
-        if not (res.status == 200):
-            return await interaction.edit_original_response(content=":x: " + await res.text(), ephemeral=True)
+        result = ""
+        for chunk in formatted_chunks:
+            coded_text = quote(text, safe="")
 
-        translation = await res.json()
-        full_translation = translation["responseData"]["translatedText"]
+            res = await self.session.get(
+                "http://api.mymemory.translated.net/get?q="
+                + coded_text
+                + "&langpair=en|"
+                + target.lower()
+            )
+
+            if not (res.status == 200):
+                return await interaction.edit_original_response(content=":x: " + await res.text(), ephemeral=True)
+
+            translation = await res.json()
+            if translation["responseStatus"] != 200:   
+                return await interaction.edit_original_response(content=":x: " + translation["responseDetails"], ephemeral=True)
+            full_translation = translation["responseData"]["translatedText"]
+            
+            result += full_translation + "\n"
 
         self.translate_cache[cache_id] = self.translate_cache.get(cache_id, {})
-        self.translate_cache[cache_id][target] = full_translation
+        self.translate_cache[cache_id][target] = result
         embed = discord.Embed(
             title="Translation",
-            description=full_translation
+            description=result
         )
         await interaction.edit_original_response(
             embed=embed,
