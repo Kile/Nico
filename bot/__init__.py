@@ -104,11 +104,11 @@ class Bot(commands.Bot):
             )
 
             if not (res.status == 200):
-                return await interaction.edit_original_response(content=":x: " + await res.text(), ephemeral=True)
+                return await interaction.edit_original_response(content=":x: " + await res.text())
 
             translation = await res.json()
             if translation["responseStatus"] != 200:   
-                return await interaction.edit_original_response(content=":x: " + translation["responseDetails"], ephemeral=True)
+                return await interaction.edit_original_response(content=":x: " + translation["responseDetails"])
             full_translation = translation["responseData"]["translatedText"]
             
             result += full_translation + "\n"
