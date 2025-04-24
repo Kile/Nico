@@ -308,6 +308,7 @@ class Events(commands.Cog):
             + "\nYou can get the tag by going to Settings > User Profile > Tags and selecting the tag you want."
             + "\nIf you want to actually participate in the server, you can click the button to come back when your timeout ends."
         )
+        embed.set_image(url="https://media.discordapp.net/attachments/1004512555538067476/1365081861038145546/tag.gif?ex=680c030d&is=680ab18d&hm=b68d21244a251c7bf4b6dfc1e78ee8b433231f4a3bbb8c1851cf50c6b154cc3d&=&width=2226&height=1420")
         view = View()
         translate_button = Button(label="Translate", style=discord.ButtonStyle.blurple, custom_id=f"translate:tag_check", emoji=TRANSLATE_EMOJI)
         view.add_item(translate_button)
@@ -322,11 +323,11 @@ class Events(commands.Cog):
         mod_message = discord.Embed(
             title="Tag question detected",
             description=message.author.mention + " in " + message.channel.mention + ":\n> " + text_with_matches_highlighted
-            + "\n\n" + "Keywords triggered: " + ", ".join(keywords),
+            + "\n\n" + "Keywords triggered: " + ", ".join(keywords) + ("\n\U000026a0 **Failed to dm user**" if not could_dm else ""),
             color=0x2f3136
         )
         mod_message.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
-        mod_message.set_footer(text=f"User ID: {message.author.id} | Dm went through: {'yes' if could_dm else 'no'} | Certainty: {'high' if certain else 'low'}")
+        mod_message.set_footer(text=f"User ID: {message.author.id} | Certainty: {'high' if certain else 'low'}")
         view = View()
         un_timeout_button = Button(label="Remove timeout", style=discord.ButtonStyle.green, custom_id=f"un_timeout:{message.author.id}")
         kick_button = Button(label="Kick", style=discord.ButtonStyle.red, custom_id=f"kick:{message.author.id}")
@@ -381,7 +382,7 @@ class Events(commands.Cog):
 
                 await view.disable(msg)
 
-        if randint(1, 200) == 1 and message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and not message.author.bot and not PotatoMember.potato: # 0.01% Chance of potato dropping
+        if randint(1, 200) == 1 and message.channel.id in self.client.server_info.EVENT_DROP_CHANNELS and not message.author.bot and not PotatoMember.potato: # 0.5% Chance of potato dropping
             PotatoMember.potato = await message.channel.send(":potato:")
 
         if PotatoMember.potato and message.content in [":potato:", "🥔", "\U0001f954"] and PotatoMember.potato.channel.id == message.channel.id and message.author.id != PotatoMember.potato.author.id:
