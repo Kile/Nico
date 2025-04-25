@@ -5,7 +5,7 @@ from discord.ext import commands, tasks
 from discord.ui import View, Button
 
 from bot.__init__ import Bot
-from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, TRANSLATE_EMOJI, IMAGE_QUESTION_REGEX, CONSTANTS, TAG_QUESTION_REGEX, TAG_INTERACTIONAL_REGEX
+from bot.static.constants import DISBOARD, ACTIVITY_EVENT, EVENT, TRANSLATE_EMOJI, IMAGE_QUESTION_REGEX, CONSTANTS, TAG_QUESTION_REGEX, TAG_INTERACTIONAL_REGEX, KILLUA_BOOSTER_ROLE, KILLUA_SERVER, WHO_PINGED_ME_REGEX
 from bot.utils.classes import Member, PotatoMember, HelloAgain
 from bot.utils.interactions import View, Button
 
@@ -29,6 +29,22 @@ class Events(commands.Cog):
     @property
     def guild(self) -> discord.Guild:
         return self.client.get_guild(self.client.server_info.ID)
+    
+    @property
+    def killua_guild(self) -> discord.Guild:
+        return self.client.get_guild(KILLUA_SERVER)
+    
+    @property
+    def killua_booster_role(self) -> discord.Role:
+        return self.killua_guild.get_role(KILLUA_BOOSTER_ROLE)
+    
+    @property
+    def killua_booster_role_nss(self) -> discord.Role:
+        return self.guild.get_role(self.client.server_info.KILLUA_BOOSTER_ROLE)
+    
+    @property
+    def booster_channel(self) -> discord.TextChannel:
+        return self.guild.get_channel(self.client.server_info.BOOSTER_CHANNEL)
 
     @property
     def potato_channel(self) -> discord.TextChannel:
@@ -56,6 +72,8 @@ class Events(commands.Cog):
             self.remove_sos_role.start()
         if not self.water.is_running():
             self.water.start()
+        if not self.add_killua_booster_role.is_running():
+            self.add_killua_booster_role.start()
         print("Logged in as {0.user}!".format(self.client))
 
     # @tasks.loop(hours=12)
@@ -117,6 +135,32 @@ class Events(commands.Cog):
     @remove_sos_role.before_loop
     async def before_remove_sos_role(self):
         await self.client.wait_until_ready()
+
+    @tasks.loop(minutes=2)
+    async def add_killua_booster_role(self):
+        """Add the "Killua booster" role to all member who are a booster on the KILLUA_SERVER"""
+        if datetime.now() - self.startup < timedelta(minutes=1):
+            return
+        
+        has_role_on_nss = [m for m in self.guild.members if self.killua_booster_role_nss in m.roles]
+        has_role_on_killua = [m for m in self.killua_guild.members if self.killua_booster_role in m.roles]
+
+        try:
+            for member in has_role_on_killua:
+                if member.id not in [m.id for m in has_role_on_nss]:
+                    nss_member = self.guild.get_member(member.id)
+                    if nss_member:
+                        await nss_member.add_roles(self.killua_booster_role_nss)
+                        await self.booster_channel.send(f"{nss_member.mention} has been given the Killua booster role for being a booster on the Killua server! Thank you for your support!")
+            
+            # Other way around
+            for member in has_role_on_nss:
+                if member.id not in [m.id for m in has_role_on_killua]:
+                    nss_member = self.guild.get_member(member.id)
+                    if nss_member:
+                        await nss_member.remove_roles(self.killua_booster_role_nss)
+        except Exception as e: # Dont want the task to stop if something goes wrong
+            print("Exception in booster task: " + e)
 
     async def handle_potato(self, message: discord.Message):
         """Drops a potato in the chat and adds it to the inventory of the first member to send a potato emoji"""
@@ -218,6 +262,63 @@ class Events(commands.Cog):
 
         await interaction.message.edit(view=view)
 
+    async def un_timeout(self, interaction: discord.Interaction):
+        """Callback for the un_timeout button"""
+        if not interaction.user.guild_permissions.moderate_members:
+            return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+        member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+        if not member:
+            return await interaction.response.send_message("Member not found", ephemeral=True)
+        if member.timed_out_until:
+            await member.timeout(None, reason="Un-timeout by moderator")
+            await interaction.response.send_message(f"✅ Un-timed out {member.mention}", ephemeral=True)
+        else:
+            await interaction.response.send_message("Member is not timed out", ephemeral=True)
+        view = View().add_item(
+            Button(label="Removed timeout", style=discord.ButtonStyle.green, disabled=True)
+        ).add_item(
+            Button(label="Mod: " + interaction.user.display_name, style=discord.ButtonStyle.grey, disabled=True)
+        )
+        await interaction.message.edit(view=view)
+
+    async def kick(self, interaction: discord.Interaction):
+        """Callback for the kick button"""
+        if not interaction.user.guild_permissions.kick_members:
+            return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+        member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+        if not member:
+            return await interaction.response.send_message("Member not found", ephemeral=True)
+        try:
+            await member.kick(reason="Kicked by moderator")
+            await interaction.response.send_message(f"✅ Kicked {member.mention}", ephemeral=True)
+        except discord.Forbidden:
+            await interaction.response.send_message("I don't have the permissions to do that!", ephemeral=True)
+        view = View().add_item(
+            Button(label="Kicked", style=discord.ButtonStyle.red, disabled=True)
+        ).add_item(
+            Button(label="Mod: " + interaction.user.display_name, style=discord.ButtonStyle.grey, disabled=True)
+        )
+        await interaction.message.edit(view=view)
+
+    async def ban(self, interaction: discord.Interaction):
+        """Callback for the ban button"""
+        if not interaction.user.guild_permissions.ban_members:
+            return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
+        member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
+        if not member:
+            return await interaction.response.send_message("Member not found", ephemeral=True)
+        try:
+            await member.ban(reason="Banned by moderator")
+            await interaction.response.send_message(f"✅ Banned {member.mention}", ephemeral=True)
+        except discord.Forbidden:
+            await interaction.response.send_message("I don't have the permissions to do that!", ephemeral=True)
+        view = View().add_item(
+            Button(label="Banned", style=discord.ButtonStyle.red, disabled=True)
+        ).add_item(
+            Button(label="Mod: " + interaction.user.display_name, style=discord.ButtonStyle.grey, disabled=True)
+        )
+        await interaction.message.edit(view=view)
+
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
         if not interaction.data.get("custom_id", False): return
@@ -231,44 +332,18 @@ class Events(commands.Cog):
         elif interaction.data["custom_id"].startswith("translate"):
             return await self.client.translate_callback(interaction)
         elif interaction.data["custom_id"].startswith("un_timeout"):
-            if not interaction.user.guild_permissions.moderate_members:
-                return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
-            member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
-            if not member:
-                return await interaction.response.send_message("Member not found", ephemeral=True)
-            if member.timed_out_until:
-                await member.timeout(None, reason="Un-timeout by moderator")
-                await interaction.response.send_message(f"✅ Un-timed out {member.mention}", ephemeral=True)
-            else:
-                await interaction.response.send_message("Member is not timed out", ephemeral=True)
-            view = View().add_item(Button(label="Removed timeout", style=discord.ButtonStyle.green, disabled=True))
-            await interaction.message.edit(view=view)
+            await self.un_timeout(interaction)
         elif interaction.data["custom_id"].startswith("kick"):
-            if not interaction.user.guild_permissions.kick_members:
-                return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
-            member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
-            if not member:
-                return await interaction.response.send_message("Member not found", ephemeral=True)
-            try:
-                await member.kick(reason="Kicked by moderator")
-                await interaction.response.send_message(f"✅ Kicked {member.mention}", ephemeral=True)
-            except discord.Forbidden:
-                await interaction.response.send_message("I don't have the permissions to do that!", ephemeral=True)
-            view = View().add_item(Button(label="Kicked", style=discord.ButtonStyle.red, disabled=True))
-            await interaction.message.edit(view=view)
+            await self.kick(interaction)
         elif interaction.data["custom_id"].startswith("ban"):
-            if not interaction.user.guild_permissions.ban_members:
-                return await interaction.response.send_message("You don't have the permissions to do that!", ephemeral=True)
-            member = self.guild.get_member(int(interaction.data["custom_id"].split(":")[1]))
-            if not member:
-                return await interaction.response.send_message("Member not found", ephemeral=True)
-            try:
-                await member.ban(reason="Banned by moderator")
-                await interaction.response.send_message(f"✅ Banned {member.mention}", ephemeral=True)
-            except discord.Forbidden:
-                await interaction.response.send_message("I don't have the permissions to do that!", ephemeral=True)
-            view = View().add_item(Button(label="Banned", style=discord.ButtonStyle.red, disabled=True))
-            await interaction.message.edit(view=view)
+            await self.ban(interaction)
+        elif interaction.data["custom_id"].startswith("revive_remove"):
+            _id = int(interaction.data["custom_id"].split(":")[1])
+            if interaction.user.id != _id:
+                return await interaction.response.send_message("You can't use this button to remove your own role.", ephemeral=True)
+            await interaction.user.remove_roles(interaction.guild.get_role(self.client.server_info.CHAT_REVIVE_ROLE))
+            await interaction.response.send_message("Your chat revive role has been removed!", ephemeral=True)
+            await interaction.message.edit(view=View().add_item(Button(label="Role Removed", style=discord.ButtonStyle.green, disabled=True)))
 
     def highlight_question_and_keyword(sekf, text: str):
         match_question = search(TAG_QUESTION_REGEX, text, IGNORECASE)
@@ -353,6 +428,23 @@ class Events(commands.Cog):
                 reference=message,
                 mention_author=False
             )
+
+        if search(WHO_PINGED_ME_REGEX, message.content, IGNORECASE) and self.client.server_info.CHAT_REVIVE_ROLE in [r.id for r in message.author.roles]:
+            await message.channel.send(
+                embed=discord.Embed(
+                    title="Who pinged me?",
+                    description="Looks like you are asking who pinged you! " + \
+                        f"You have the <@&{self.client.server_info.CHAT_REVIVE_ROLE}> role, which is pinged occasionally to revive the chat. " + \
+                        "If you don't want to be pinged for this anymore, you can remove the chat revive role through this button.",
+                    color=0x2f3136
+                ),
+                reference=message,
+                mention_author=False,
+                view=View().add_item(
+                    Button(label="Remove chat revive role", style=discord.ButtonStyle.blurple, custom_id=f"revive_remove:" + str(message.author.id))
+                )
+            )
+
 
         if search(TAG_QUESTION_REGEX, message.content, IGNORECASE):
             await self.tag_question_core(message, True)

@@ -4,6 +4,7 @@ from discord.ext import commands
 from bot.__init__ import Bot
 from bot.utils.interactions import Modal
 from datetime import timedelta
+from bot.static.constants import GUILD_OBJECT
 
 class Seasonal(commands.Cog):
     """A number of commands for events such as Valentines day"""
@@ -28,6 +29,7 @@ class Seasonal(commands.Cog):
         return "".join([chars[d] for d in digits[::-1]])
 
     @discord.app_commands.command()
+    @discord.app_commands.guilds(GUILD_OBJECT)
     async def valentine(self, interaction: discord.Interaction, other: discord.Member):
         """Send a valentine to another member in the server"""
 

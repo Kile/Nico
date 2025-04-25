@@ -6,7 +6,7 @@ from typing import List
 from random import choice
 
 from bot.__init__ import Bot
-from bot.static.constants import MOTM, MOTM_VOTE_LIMIT, CONSTANTS
+from bot.static.constants import MOTM, MOTM_VOTE_LIMIT, CONSTANTS, GUILD_OBJECT
 from bot.utils.interactions import Modal
 
 class MemberOfTheMonth(commands.Cog):
@@ -17,7 +17,7 @@ class MemberOfTheMonth(commands.Cog):
     async def cog_load(self):
         print("Loaded motm cog")
 
-    motm = discord.app_commands.Group(name="motm", description="Commands relating to the member of the month")
+    motm = discord.app_commands.Group(name="motm", description="Commands relating to the member of the month", guild_ids=[GUILD_OBJECT.id])
 
     @property
     def guild(self) -> discord.Guild:
