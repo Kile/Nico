@@ -76,6 +76,18 @@ class Events(commands.Cog):
             self.add_killua_booster_role.start()
         print("Logged in as {0.user}!".format(self.client))
 
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
+        if reaction.message.guild != self.guild: return
+        # if the reaction is named middle_finger or is a middle finger, kick person and remove the reaction (unless its the first)
+        if reaction.emoji == "\U0001f595" or "middle_finger" in reaction.emoji.name.lower():
+            member = self.guild.get_member(user.id)
+            if not member:
+                return
+            await member.kick(reason="Middle finger reaction :)")
+            if reaction.count > 1:
+                await reaction.remove(user)
+
     # @tasks.loop(hours=12)
     # async def hello_again(self):
     #     """Sends a reminder the server exists if the user has not interacted in it a week after joining"""

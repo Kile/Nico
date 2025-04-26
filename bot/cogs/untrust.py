@@ -1,6 +1,6 @@
 import discord
 
-from typing import Union
+from typing import Union, Optional
 from datetime import timedelta
 
 from discord.ext import commands
@@ -24,7 +24,7 @@ class UntrustView(discord.ui.View):
         self.channel = channel
         self.target = target
         self.reason = reason
-        self.msg = None
+        self.msg: Optional[discord.Message] = None
 
         self.votes = {
             "yes": [],
@@ -78,7 +78,6 @@ class UntrustView(discord.ui.View):
         
     @discord.ui.button(label="Untrust (0/2)", style=discord.ButtonStyle.red)
     async def untrust(self, interaction: discord.Interaction, _: discord.ui.Button):
-
         if interaction.user.id in self.votes["yes"]:
             self.votes["yes"].remove(interaction.user.id)
         else:
@@ -181,7 +180,7 @@ class Untrust(commands.Cog):
             "color": int(discord.Color.red())
         })
         await interaction.response.send_message(embed=embed, view=view)
-        view.msg = await interaction.original_message()
+        view.msg = await interaction.original_response()
 
         await view.wait()
 
