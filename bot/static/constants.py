@@ -26,7 +26,7 @@ KILE = 606162661184372736
 KILLUA_SERVER = 715358111472418908
 KILLUA_BOOSTER_ROLE = 769622564648648744
 
-IMAGE_QUESTION_REGEX = r"(no|can'?t|cannot|how|why|give).*(send|upload).*(image|gif|attachment).*\??"
+IMAGE_QUESTION_REGEX = r"(no|can'?t|cannot|how|why|give).*(send|upload|post).*(image|gif|attachment|pic(s|ture)?|img).*\??"
 
 TAG_QUESTION_REGEX = r"(how|where|why|what|give?).+ (tag|vip)( |$|\?)"
 
