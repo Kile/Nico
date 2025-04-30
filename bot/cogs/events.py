@@ -502,6 +502,14 @@ class Events(commands.Cog):
                     )
                 )
             )
+        elif interaction.data["custom_id"].startswith("dismiss"):
+            _id = int(interaction.data["custom_id"].split(":")[1])
+            if interaction.user.id != _id:
+                return await interaction.response.send_message(
+                    "You can't use this button.", ephemeral=True
+                )
+            await interaction.response.defer()
+            await interaction.message.delete()
 
     def highlight_question_and_keyword(sekf, text: str):
         match_question = search(TAG_QUESTION_REGEX, text, IGNORECASE)
@@ -661,6 +669,12 @@ class Events(commands.Cog):
                         label="Remove chat revive role",
                         style=discord.ButtonStyle.blurple,
                         custom_id=f"revive_remove:" + str(message.author.id),
+                    )
+                ).add_item(
+                    Button(
+                        label="False flag/Dismiss",
+                        style=discord.ButtonStyle.red,
+                        custom_id=f"dismiss:" + str(message.author.id),
                     )
                 ),
             )

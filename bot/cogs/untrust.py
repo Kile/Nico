@@ -9,6 +9,8 @@ from bot.__init__ import Bot
 from bot.utils.functions import is_dev
 from bot.static.constants import ServerInfo, GUILD_OBJECT
 
+UNTRUST_THRESHOLD = 3
+
 class UntrustView(discord.ui.View):
 
     def __init__(
@@ -76,7 +78,7 @@ class UntrustView(discord.ui.View):
 
         return True
         
-    @discord.ui.button(label="Untrust (0/2)", style=discord.ButtonStyle.red)
+    @discord.ui.button(label=f"Untrust (0/{UNTRUST_THRESHOLD})", style=discord.ButtonStyle.red)
     async def untrust(self, interaction: discord.Interaction, _: discord.ui.Button):
         if interaction.user.id in self.votes["yes"]:
             self.votes["yes"].remove(interaction.user.id)
@@ -85,9 +87,9 @@ class UntrustView(discord.ui.View):
 
             if interaction.user.id in self.votes["no"]: # If untrust is pressed while user has pressed abort before, their abort vote is removed
                 self.votes["no"].remove(interaction.user.id)
-                self.children[1].label = f"Abort ({len(self.votes['no'])}/2)"
+                self.children[1].label = f"Abort ({len(self.votes['no'])}/{UNTRUST_THRESHOLD})"
 
-        if len(self.votes["yes"]) >= 2:
+        if len(self.votes["yes"]) >= UNTRUST_THRESHOLD:
             await self.target.timeout(timedelta(days=1)) # Timeout user for 24 hours
             await interaction.response.edit_message(content=f"Successfull vote to timeout user! {self.target.mention} has been timeouted for 24h", view=None, embeds=[])
             embed = discord.Embed.from_dict({
@@ -100,16 +102,16 @@ class UntrustView(discord.ui.View):
                     {"name": "Voted against by", "value": "\n".join([f"<@{id}>" for id in self.votes["no"]]) or "No votes against."}
                 ],
                 "color": int(discord.Color.red()),
-                "description": "[description](" +  self.msg.jump_url + ")"
+                "description": "[Jump to original message](" +  self.msg.jump_url + ")"
             })
             await self.channel.send(embed=embed)
             return self.stop()
 
         else:
-            self.children[0].label = f"Untrust ({len(self.votes['yes'])}/2)"
+            self.children[0].label = f"Untrust ({len(self.votes['yes'])}/{UNTRUST_THRESHOLD})"
             await interaction.response.edit_message(view=self)
 
-    @discord.ui.button(label="Abort (0/2)", style=discord.ButtonStyle.green)
+    @discord.ui.button(label=f"Abort (0/{UNTRUST_THRESHOLD})", style=discord.ButtonStyle.green)
     async def abort(self, interaction: discord.Interaction, _: discord.ui.Button):
 
         if interaction.user.id in self.votes["no"]:
@@ -118,9 +120,9 @@ class UntrustView(discord.ui.View):
             self.votes["no"].append(interaction.user.id)
             if interaction.user.id in self.votes["yes"]: # If abort is pressed while user has pressed untrust before, their untrust vote is removed
                 self.votes["yes"].remove(interaction.user.id)
-                self.children[0].label = f"Untrust ({len(self.votes['yes'])}/2)"
+                self.children[0].label = f"Untrust ({len(self.votes['yes'])}/{UNTRUST_THRESHOLD})"
 
-        if len(self.votes["no"]) >= 2:
+        if len(self.votes["no"]) >= UNTRUST_THRESHOLD:
             await interaction.response.edit_message(content=f"Unsuccessfull vote to timeout user! Vote to timeout {self.target.mention} has been aborted", view=None, embeds=[])
             embed = discord.Embed.from_dict({
                 "title": "Unsuccessfull untrust vote",
@@ -138,7 +140,7 @@ class UntrustView(discord.ui.View):
             return self.stop()
 
         else:
-            self.children[1].label = f"Abort ({len(self.votes['no'])}/2)"
+            self.children[1].label = f"Abort ({len(self.votes['no'])}/{UNTRUST_THRESHOLD})"
             await interaction.response.edit_message(view=self)
 
 class Untrust(commands.Cog):
@@ -159,7 +161,7 @@ class Untrust(commands.Cog):
 
     @discord.app_commands.command()
     @discord.app_commands.guilds(GUILD_OBJECT)
-    async def untrust(self, interaction: discord.Interaction, target: discord.Member, reason: str = "No reason provided"):
+    async def untrust(self, interaction: discord.Interaction, target: discord.Member, reason: str):
         """Start a vote to timeout a user for 24h."""
         if target == interaction.user:
             return await interaction.response.send_message("You cannot untrust yourself!", ephemeral=True)
