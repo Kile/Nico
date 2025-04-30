@@ -93,7 +93,7 @@ class Events(commands.Cog):
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if reaction.message.guild != self.guild:
             return
-        if not (self.new_role in reaction.message.author.roles):
+        if not (self.new_role in self.guild.get_member(user.id).roles):
             return
         # if the reaction is named middle_finger or is a middle finger, kick person and remove the reaction (unless its the first)
         if reaction.emoji == "\U0001f595" or (
