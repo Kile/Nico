@@ -98,8 +98,10 @@ class Events(commands.Cog):
         # if the reaction is named middle_finger or is a middle finger, kick person and remove the reaction (unless its the first)
         if reaction.emoji == "\U0001f595" or (
             hasattr(reaction.emoji, "name")
-            and "middle_finger" in reaction.emoji.name.lower()
-            or "fuck" in reaction.emoji.name.lower()
+            and (
+                "middle_finger" in reaction.emoji.name.lower()
+                or "fuck" in reaction.emoji.name.lower()
+            )
         ):
             member = self.guild.get_member(user.id)
             if not member:
@@ -664,13 +666,15 @@ class Events(commands.Cog):
                 ),
                 reference=message,
                 mention_author=False,
-                view=View().add_item(
+                view=View()
+                .add_item(
                     Button(
                         label="Remove chat revive role",
                         style=discord.ButtonStyle.blurple,
                         custom_id=f"revive_remove:" + str(message.author.id),
                     )
-                ).add_item(
+                )
+                .add_item(
                     Button(
                         label="False flag/Dismiss",
                         style=discord.ButtonStyle.red,
