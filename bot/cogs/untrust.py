@@ -4,6 +4,7 @@ from typing import Union, Optional
 from datetime import timedelta
 
 from discord.ext import commands
+from discord.ui import View, Button
 
 from bot.__init__ import Bot
 from bot.utils.functions import is_dev
@@ -11,7 +12,7 @@ from bot.static.constants import ServerInfo, GUILD_OBJECT
 
 UNTRUST_THRESHOLD = 3
 
-class UntrustView(discord.ui.View):
+class UntrustView(View):
 
     def __init__(
         self, 
@@ -34,6 +35,26 @@ class UntrustView(discord.ui.View):
         }
         self.timed_out = False
 
+    def untrust_result_fiew(self, user_id, failed: bool) -> View:
+        view = View()
+        un_timeout_button = Button(
+            label="Remove timeout" + (" (from initiator)" if failed else ""),
+            style=discord.ButtonStyle.green,
+            custom_id=f"un_timeout:{user_id}",
+        )
+        kick_button = Button(
+            label="Kick" + (" initiator" if failed else ""),
+            style=discord.ButtonStyle.red,
+            custom_id=f"kick:{user_id}",
+        )
+        ban_button = Button(
+            label="Ban" + (" initiator" if failed else ""),
+            style=discord.ButtonStyle.red,
+            custom_id=f"ban:{user_id}",
+        )
+        view.add_item(un_timeout_button).add_item(kick_button).add_item(ban_button)
+        return view
+
     async def disable(self, msg:discord.Message) -> Union[discord.Message, None]:
         """"Disables the children inside of the view"""
         if not [c for c in self.children if not c.disabled]: # if every child is already disabled, we don't need to edit the message again
@@ -50,7 +71,7 @@ class UntrustView(discord.ui.View):
     async def on_timeout(self) -> None:
         self.timed_out = True
         embed = discord.Embed.from_dict({
-            "title": "Unsuccessfull untrust vote",
+            "title": "Unsuccessfull untrust vote (timed out)",
             "fields": [
                 {"name": "User", "value": self.target.mention},
                 {"name": "Vote initiated by", "value": "<@{}>".format(self.user_id)},
@@ -58,10 +79,15 @@ class UntrustView(discord.ui.View):
                 {"name": "Voted for by", "value": "\n".join([f"<@{id}>" for id in self.votes["yes"]])  or "No votes for."},
                 {"name": "Voted against by", "value": "\n".join([f"<@{id}>" for id in self.votes["no"]])}
             ],
-            "color": int(discord.Color.red()),
+            "color": int(discord.Color.orange()),
             "description": "[Jump to original message](" +  self.msg.jump_url + ")"
         })
-        await self.channel.send(embed=embed)
+        # Timeout initiator for 12hrs
+        guild = self.msg.guild
+        initiator = guild.get_member(self.user_id)
+        await initiator.timeout(timedelta(hours=12))
+        view = self.untrust_result_fiew(self.user_id, True)
+        await self.channel.send(embed=embed, view=view)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.target == interaction.user:
@@ -104,7 +130,8 @@ class UntrustView(discord.ui.View):
                 "color": int(discord.Color.red()),
                 "description": "[Jump to original message](" +  self.msg.jump_url + ")"
             })
-            await self.channel.send(embed=embed)
+            view = self.untrust_result_fiew(self.target.id, False)
+            await self.channel.send(embed=embed, view=view)
             return self.stop()
 
         else:
@@ -133,10 +160,15 @@ class UntrustView(discord.ui.View):
                     {"name": "Voted for by", "value": "\n".join([f"<@{id}>" for id in self.votes["yes"]])  or "No votes for."},
                     {"name": "Voted against by", "value": "\n".join([f"<@{id}>" for id in self.votes["no"]])}
                 ],
-                "color": int(discord.Color.red()),
+                "color": int(discord.Color.orange()),
                 "description": "[Jump to original message](" +  self.msg.jump_url + ")"
             })
-            await self.channel.send(embed=embed)
+            # Timeout initiator for 24hrs
+            guild = self.msg.guild
+            initiator = guild.get_member(self.user_id)
+            await initiator.timeout(timedelta(hours=24))
+            view = self.untrust_result_fiew(self.user_id, True)
+            await self.channel.send(embed=embed, view=view)
             return self.stop()
 
         else:
