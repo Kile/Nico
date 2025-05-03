@@ -63,10 +63,7 @@ class UntrustView(View):
         for c in self.children:
             c.disabled = True
 
-        if self.interaction and not self.interaction.response.is_done():
-            await self.interaction.response.edit_message(view=self)
-        else:
-            await msg.edit(view=self)
+        await msg.edit(view=self)
 
     async def on_timeout(self) -> None:
         self.timed_out = True
@@ -150,7 +147,7 @@ class UntrustView(View):
                 self.children[0].label = f"Untrust ({len(self.votes['yes'])}/{UNTRUST_THRESHOLD})"
 
         if len(self.votes["no"]) >= UNTRUST_THRESHOLD:
-            await interaction.response.edit_message(content=f"Unsuccessfull vote to timeout user! Vote to timeout {self.target.mention} has been aborted", view=None, embeds=[])
+            await interaction.response.edit_message(content=f"Unsuccessfull vote to timeout user! Vote to timeout {self.target.mention} has been aborted, and the initiator (<@{self.user_id}>) has been timeouted instead.", view=None, embeds=[])
             embed = discord.Embed.from_dict({
                 "title": "Unsuccessfull untrust vote",
                 "fields": [
@@ -219,7 +216,7 @@ class Untrust(commands.Cog):
         await view.wait()
 
         if view.timed_out:
-            await interaction.channel.send("Vote timed out.", reference=view.msg)
+            await interaction.channel.send("Vote timed out. The initator has been timed out for 12 hours.", reference=view.msg)
 
         await view.disable(view.msg)
 
