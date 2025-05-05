@@ -217,7 +217,6 @@ class Untrust(commands.Cog):
 
         if view.timed_out:
             await interaction.channel.send("Vote timed out. The initator has been timed out for 12 hours.", reference=view.msg)
-
-        await view.disable(view.msg)
+            await view.disable(view.msg)
 
 Cog = Untrust
