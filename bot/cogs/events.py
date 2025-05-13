@@ -565,9 +565,9 @@ class Events(commands.Cog):
         embed = discord.Embed(
             title="Timed out for mentioning tags",
             description="You were muted for asking about tags."
-            + "\nTo use our VIP tag you do not need to have full access to the server."
-            + "\nYou can get the tag by going to Settings > User Profile > Tags and selecting the tag you want."
-            + "\nIf you want to actually participate in the server, you can click the button to come back when your timeout ends.",
+            + "\nTo get the VIP tag, you need to join this server: https://discord.gg/P7t2x9vDfh"
+            + "\nThen you can get the tag by going to Settings > User Profile > Tags and selecting the tag you want."
+            + "\nIf you joined for the VIP tag, please leave this server.",
         )
         embed.set_image(
             url="https://media.discordapp.net/attachments/1004512555538067476/1365081861038145546/tag.gif?ex=680c030d&is=680ab18d&hm=b68d21244a251c7bf4b6dfc1e78ee8b433231f4a3bbb8c1851cf50c6b154cc3d&=&width=2226&height=1420"

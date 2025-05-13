@@ -223,11 +223,11 @@ class Event(commands.Cog):
             await view.wait()
 
             if view.timed_out:
-                return await view.disable(await view.interaction.original_message())
+                return await view.disable(await view.interaction.original_response())
 
             if view.value == "cancel":
                 await view.interaction.response.send_message("Successfully cancelled")
-                return await view.disable(await view.interaction.original_message())
+                return await view.disable(await view.interaction.original_response())
 
             await view.disable(respond=False)
     
