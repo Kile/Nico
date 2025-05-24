@@ -169,8 +169,9 @@ class Event(commands.Cog):
 
         if randint(1, 2) == 1:
             member.add_points(points)
-            return await interaction.response.send_message(f"You won! :tada: That is {points} added to your balance")
+            await interaction.response.send_message(f"You won! :tada: That is {points} added to your balance")
         else:
+            member.remove_coins(points)
             await interaction.response.send_message(f"You lost! :sob: Say goobye to your {points} points")
 
         member.refresh_cooldown()
