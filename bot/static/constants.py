@@ -201,7 +201,9 @@ class NSSServer:
         813789725722673154: {"id": 1028767931812823080, "icon": "<:Aphrodite:1030895869232427058>"}, # Level 15: Aphrodite
         813789854861230121: {"id": 1028767710680727592, "icon": "<:Artemis:1030894771872481412>"}, # Level 20: Artemis
         813790065654366228: {"id": 1028767667491971183, "icon": "<:Hermes:1030894892265779220>"}, # Level 50: Hermes
-        997254017002512435: {"id": 1028767616564744252, "icon": "<:Hera:1030894855972470916>"}, # Level 100: Hera
+        1377335406185676830: {"id": 1028767616564744252, "icon": "<:Hera:1377996165060100096>"}, # Level 75: Cabin of Hera
+        1377761921553535076: {"id": 1377356087149203476, "icon": "<:Hephaestus:1377996163801677834>"}, # Level 90: Cabin of Hephaestus
+        997254017002512435: {"id": 1377762708237324359, "icon": "<:Poseidon:1377996166729306195>"}, # Level 100: Cabin of Poseidon
         712375696642801854: {"id": 1029665470179188746, "icon": "<:Soteria:1030894946883993755>"}, # will help role: Soteria
         756512273001873458: {"id": 1029665250380873728, "icon": "<:Plutus:1030894925828599859>"} # giveaway role: Plutus
     }
@@ -215,7 +217,9 @@ Aphrodite level 15
 Artemis level 20
 Demeter level 25
 Hermes level 50
-Hera level 100 
+Hera level 75
+Hephaestus level 90
+Poseidon level 100
 """
 
 class TestServer:
