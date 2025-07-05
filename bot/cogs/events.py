@@ -760,8 +760,6 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        # TEMPORARILY DISABLED
-
         if member.guild != self.guild:
             return
         # HelloAgain().remove_user(member.id)

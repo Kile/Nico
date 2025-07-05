@@ -30,13 +30,12 @@ class Tag(commands.Cog):
             return await interaction.response.send_message("You already have server access bro", ephemeral=True)
         
     # Add tag role on join
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
-        return # TEMPORARILY DISABLED
-        if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
+    # @commands.Cog.listener()
+    # async def on_member_join(self, member: discord.Member):
+    #     if member.guild.id != self.client.server_info.ID: return # Don't want that process when someone is joining on another server
 
-        if member.bot: return
+    #     if member.bot: return
 
-        await member.add_roles(member.guild.get_role(TAG_ROLE))
+    #     await member.add_roles(member.guild.get_role(TAG_ROLE))
 
 Cog = Tag

@@ -51,15 +51,18 @@ class Boosters(commands.Cog):
 
     def _overlay(self, image: BytesIO, logo: bytes) -> BytesIO:
         new_frames: List[Image.Image] = []
-        gif = Image.open(BytesIO(logo))
+        gif: Image.Image = Image.open(BytesIO(logo))
         duration = gif.info["duration"]
         for i in range(gif.n_frames):
             gif.seek(i)
-            background = Image.open(image).convert("RGBA")
+            background: Image.Image = Image.open(image).convert("RGBA")
             # resize background to fit the frame
             background = background.resize(gif.size, Image.ANTIALIAS)
             background.paste(gif, (0, 0), gif.convert("RGBA"))
             new_frames.append(background)
+
+        if len(new_frames) == 0:
+            raise ValueError("No frames found in the GIF")
 
         # Save the frames to a buffer and return it
         buffer = BytesIO()
