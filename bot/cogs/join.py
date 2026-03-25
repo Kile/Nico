@@ -2,7 +2,6 @@ import discord
 
 from discord.ext import commands
 from random import sample
-from typing import List
 
 from bot.__init__ import Bot
 from bot.utils.interactions import Modal, View, Button
@@ -111,14 +110,14 @@ class Join(commands.Cog):
         })
         message = await self.welcome_channel.send(content=member.mention, embed=embed)
 
-        # view = View(timeout=600)
-        # view.add_item(WelcomeButton(message, member))
+        view = View(timeout=600)
+        view.add_item(WelcomeButton(message, member))
 
-        # notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
+        notification = await self.general_channel.send(f"<:member_join:1013795687508484116> **{member.display_name}** just joined <@&{self.client.server_info.WELCOMER_ROLE}>! To gain full access to the server please read instructions in <#726053325623263293>.", view=view)
 
-        # await view.wait()
+        await view.wait()
 
-        # await view.disable(notification)
+        await view.disable(notification)
 
     @discord.app_commands.command()
     async def join(self, interaction: discord.Interaction):
@@ -132,7 +131,7 @@ class Join(commands.Cog):
         if not member:
             return await interaction.response.send_message("You are not a member of the server this bot is made for so you cannot use this command.", ephemeral=True)
 
-        if not self.new_role in member.roles:
+        if self.new_role not in member.roles:
             return await interaction.response.send_message("You already have access to the server!", ephemeral=True)
         
         if self.joined_for_tag_role in member.roles:
@@ -150,7 +149,7 @@ class Join(commands.Cog):
         incorrect = []
 
         for pos, val in enumerate(modal.values):
-            if not val.lower() in modal.questions[pos]["answer"]:
+            if val.lower() not in modal.questions[pos]["answer"]:
                 incorrect.append(pos+1)
                 
         if len(incorrect) > 0:

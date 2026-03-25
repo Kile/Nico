@@ -282,8 +282,8 @@ class Potato(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.client.wait_until_ready()
-        # if not self.auction_loop.is_running():
-        #     self.auction_loop.start()
+        if not self.auction_loop.is_running():
+            self.auction_loop.start()
 
     def _intersect(self, list1: list, list2: list) -> list:
         return list(set(list1).intersection(set(list2)))
@@ -704,7 +704,7 @@ class Potato(commands.Cog):
     @auctions.command()
     async def create(self, interaction: discord.Interaction):
         """Creates an auction"""
-        if not self.client.server_info.VERIFIED_ROLE in [r.id for r in interaction.user.roles]:
+        if self.client.server_info.VERIFIED_ROLE not in [r.id for r in interaction.user.roles]:
             return await interaction.response.send_message("You must be verified to create an auction.", ephemeral=True)
 
         view = CreateAuctionView(interaction.user.id, self.client.server_info.AUCTIONABLE_ROLES, self.client.server_info.PREMIUM_ROLES, interaction)
@@ -736,6 +736,9 @@ class Potato(commands.Cog):
 
         if bid > Member(interaction.user.id).potatoes:
             return await interaction.response.send_message("You do not have enough potatoes to bid that much.", ephemeral=True)
+        
+        if item.ending_at < datetime.now():
+            return await interaction.response.send_message("This auction has already ended.", ephemeral=True)
 
         previous_highest = item._find_first_valid_bidder()
         highest = item.bid(interaction.user, bid, maximum_bid)
