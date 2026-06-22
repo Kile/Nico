@@ -158,7 +158,7 @@ class Event(commands.Cog):
         if points < 1:
             return await interaction.response.send_message("You can't gamble less than 1 point!", ephemeral=True)
 
-        if points > int(member.points*0.25):
+        if points > int(member.points*0.05):
             return await interaction.response.send_message(f"You can't gamble more than 25% of your points! ({int(member.points*0.05)} points)", ephemeral=True)
 
         if member.points < points:
